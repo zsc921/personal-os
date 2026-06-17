@@ -1,0 +1,52 @@
+/* src/components/Journal.module.css */
+.wrapper { display: flex; flex-direction: column; gap: 14px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+
+.recordArea { display: flex; flex-direction: column; align-items: center; padding: 28px 0 20px; }
+.recordBtn {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: var(--surface2); border: 2px solid var(--border);
+  font-size: 22px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.recordBtn:hover { border-color: var(--accent); }
+.recordBtn.recording { border-color: var(--red); background: rgba(248,113,113,.1); animation: ring 1.5s ease infinite; }
+@keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(248,113,113,.35) } 70% { box-shadow: 0 0 0 12px rgba(248,113,113,0) } 100% { box-shadow: 0 0 0 0 rgba(248,113,113,0) } }
+.recordLabel { margin-top: 10px; font-size: 12px; color: var(--muted); }
+.timer { font-size: 20px; font-weight: 600; color: var(--red); margin-top: 8px; }
+
+.transcriptArea { margin-top: 4px; }
+.transcriptBox { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; font-family: inherit; padding: 10px 12px; line-height: 1.6; outline: none; resize: vertical; margin-bottom: 10px; }
+.transcriptBox:focus { border-color: var(--accent); }
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.moodSection { margin-bottom: 12px; padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+.moodLabel { font-size: 11px; color: var(--muted); text-align: center; margin-bottom: 10px; letter-spacing: 0.04em; }
+.moodBadge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); margin-top: 8px; padding: 4px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; }
+.moodDot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.accentBtn { background: var(--accent); border: none; border-radius: 6px; color: #0E0E11; font-size: 12px; font-weight: 600; padding: 7px 14px; cursor: pointer; font-family: inherit; transition: opacity .15s; }
+.accentBtn:hover:not(:disabled) { opacity: .85; }
+.accentBtn:disabled { opacity: .4; cursor: not-allowed; }
+.ghostBtn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-size: 12px; padding: 7px 12px; cursor: pointer; font-family: inherit; transition: border-color .15s, color .15s; }
+.ghostBtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.ghostBtn:disabled { opacity: .4; }
+
+.aiBlock { background: rgba(167,139,250,.08); border: 1px solid rgba(167,139,250,.2); border-radius: 8px; padding: 12px; font-size: 12px; color: var(--accent); line-height: 1.6; }
+.aiLabel { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; opacity: .7; }
+.aiSummary { margin-bottom: 6px; }
+.aiRow { margin-top: 4px; }
+.aiKey { opacity: .6; }
+
+.entry { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+.entryHeader { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 8px; align-items: center; }
+.editBtn { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; padding: 0 2px; transition: color .15s; }
+.editBtn:hover { color: var(--accent); }
+.deleteBtn { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 0 2px; transition: color .15s; }
+.deleteBtn:hover { color: var(--red); }
+.editBlock { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.editTextarea { width: 100%; background: var(--surface); border: 1px solid var(--accent); border-radius: 6px; color: var(--text); font-size: 13px; font-family: inherit; padding: 8px 10px; line-height: 1.6; outline: none; resize: vertical; }
+.editBtns { display: flex; gap: 8px; }
+.accentBtn { background: var(--accent); border: none; border-radius: 5px; color: #0E0E11; font-size: 11px; font-weight: 600; padding: 5px 12px; cursor: pointer; font-family: inherit; }
+.ghostBtn { background: none; border: 1px solid var(--border); border-radius: 5px; color: var(--muted); font-size: 11px; padding: 5px 10px; cursor: pointer; font-family: inherit; }
+.entryText { font-size: 13px; color: var(--text); line-height: 1.6; margin-bottom: 10px; }
