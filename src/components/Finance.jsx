@@ -2,14 +2,25 @@
 import { useState } from 'react'
 import styles from './Finance.module.css'
 
-const CATS = ['Food', 'Transport', 'Shopping', 'Health', 'Other']
-const ICONS = { Food: '🛒', Transport: '🚇', Shopping: '📦', Health: '💪', Other: '💳' }
+const CATS = ['Food', 'Grocery', 'Transport', 'Shopping', 'Health', 'Home', 'Travel', 'Beauty', 'Sports', 'Utility', 'Other']
+const ICONS = { Food: '🛒', Grocery: '🥦', Transport: '🚇', Shopping: '📦', Health: '💪', Home: '🏠', Travel: '✈️', Beauty: '💄', Sports: '⚽', Utility: '💡', Other: '💳' }
 
-export default function Finance({ budgets, transactions, totalSpent, totalBudget, onDeleteTransaction, onEditTransaction }) {
+export default function Finance({ budgets, transactions, totalSpent, totalBudget, onDeleteTransaction, onEditTransaction, settings, onUpdateSetting }) {
   const remaining = totalBudget - totalSpent
   const overBudget = budgets.filter(b => b.spent > b.budget)
   const [editingId, setEditingId] = useState(null)
   const [editFields, setEditFields] = useState({})
+  const [editingRate, setEditingRate] = useState(false)
+  const [rateInput, setRateInput] = useState('')
+
+  const rate = settings?.usd_cny_rate || 7.1
+  const toCny = usd => (usd * rate).toLocaleString('en-US', { maximumFractionDigits: 0 })
+
+  async function saveRate() {
+    const r = parseFloat(rateInput)
+    if (!isNaN(r) && r > 0) await onUpdateSetting('usd_cny_rate', r)
+    setEditingRate(false)
+  }
 
   function startEdit(t) {
     setEditingId(t.id)
@@ -31,20 +42,49 @@ export default function Finance({ budgets, transactions, totalSpent, totalBudget
 
   return (
     <div className={styles.wrapper}>
+      <div className={styles.rateBar}>
+        {editingRate ? (
+          <div className={styles.rateEdit}>
+            <span className={styles.rateLabel}>1 USD =</span>
+            <input
+              className={styles.rateInput}
+              type="number"
+              step="0.01"
+              value={rateInput}
+              onChange={e => setRateInput(e.target.value)}
+              autoFocus
+            />
+            <span className={styles.rateLabel}>CNY</span>
+            <button className={styles.accentBtn} onClick={saveRate}>Save</button>
+            <button className={styles.ghostBtn} onClick={() => setEditingRate(false)}>✕</button>
+          </div>
+        ) : (
+          <div className={styles.rateDisplay}>
+            <span className={styles.rateLabel}>Exchange rate: 1 USD = ¥{rate}</span>
+            <button className={styles.rateEditBtn} onClick={() => { setRateInput(String(rate)); setEditingRate(true) }}>
+              ✎ edit
+            </button>
+          </div>
+        )}
+      </div>
+
       <div className={styles.statsRow}>
         <div className={styles.statCard}>
           <div className={styles.statLabel}>Monthly budget</div>
           <div className={styles.statValue}>${totalBudget.toLocaleString()}</div>
+          <div className={styles.statCny}>¥{toCny(totalBudget)}</div>
         </div>
         <div className={styles.statCard}>
           <div className={styles.statLabel}>Spent so far</div>
           <div className={styles.statValue}>${totalSpent.toLocaleString()}</div>
+          <div className={styles.statCny}>¥{toCny(totalSpent)}</div>
         </div>
         <div className={styles.statCard}>
           <div className={styles.statLabel}>Remaining</div>
           <div className={`${styles.statValue} ${remaining >= 0 ? styles.up : styles.down}`}>
             {remaining >= 0 ? '+' : '-'}${Math.abs(remaining).toLocaleString()}
           </div>
+          <div className={styles.statCny}>¥{toCny(Math.abs(remaining))}</div>
         </div>
       </div>
 
@@ -117,7 +157,10 @@ export default function Finance({ budgets, transactions, totalSpent, totalBudget
                       {t.created_at ? new Date(t.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''} · {t.cat}
                     </div>
                   </div>
-                  <div className={styles.txAmount}>-${t.amount}</div>
+                  <div className={styles.txAmount}>
+                    -${t.amount}
+                    <span className={styles.txCny}>¥{toCny(t.amount)}</span>
+                  </div>
                   <div className={styles.rowActions}>
                     <button className={styles.editBtn} onClick={() => startEdit(t)} title="Edit">✎</button>
                     <button className={styles.deleteBtn} onClick={() => onDeleteTransaction(t.id)} title="Delete">×</button>

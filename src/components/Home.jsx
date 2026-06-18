@@ -1,6 +1,7 @@
 // src/components/Home.jsx
 import { useState, useEffect } from 'react'
 import { callClaude, parseJSON } from '../lib/claude'
+import SleepEnergyChart from './SleepEnergyChart'
 import styles from './Home.module.css'
 
 const TODAY = new Date().toISOString().split('T')[0]
@@ -162,20 +163,9 @@ Latest sleep/energy log: ${data.wellnessLogs[0] ? `${data.wellnessLogs[0].sleep_
       <div className={styles.card}>
         <div className={styles.cardHeader}>
           <span className={styles.cardTitle}>Sleep & energy</span>
+          <span className={styles.cardSub}>last {Math.min(data.wellnessLogs.length, 14)} days</span>
         </div>
-        {data.wellnessLogs.length === 0 ? (
-          <p className={styles.empty}>No logs yet. Try the command bar: "Slept 7.5 hours, energy 7/10"</p>
-        ) : (
-          <div className={styles.wellnessRow}>
-            {data.wellnessLogs.slice(0, 7).reverse().map(w => (
-              <div key={w.id} className={styles.wellnessBar}>
-                <div className={styles.wellnessBarFill} style={{ height: `${Math.min(100, ((w.sleep_hours || 0) / 10) * 100)}%` }} />
-                <span className={styles.wellnessVal}>{w.sleep_hours ?? '–'}h</span>
-                {w.energy_level != null && <span className={styles.wellnessEnergy}>⚡{w.energy_level}</span>}
-              </div>
-            ))}
-          </div>
-        )}
+        <SleepEnergyChart logs={data.wellnessLogs.slice(0, 14)} />
       </div>
     </div>
   )

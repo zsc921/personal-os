@@ -14,6 +14,9 @@ export function useData() {
   const [events, setEvents] = useState({})
   const [journalEntries, setJournalEntries] = useState([])
   const [wellnessLogs, setWellnessLogs] = useState([])
+  const [bodyLogs, setBodyLogs] = useState([])
+  const [meals, setMeals] = useState([])
+  const [settings, setSettings] = useState({ usd_cny_rate: 7.1 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -27,13 +30,16 @@ export function useData() {
   async function loadAll() {
     setLoading(true)
     try {
-      const [h, t, b, e, j, w] = await Promise.all([
+      const [h, t, b, e, j, w, s, bl, m] = await Promise.all([
         supabase.from('habits').select('*').order('created_at'),
         supabase.from('transactions').select('*').order('created_at', { ascending: false }).limit(20),
         supabase.from('budgets').select('*').order('cat'),
         supabase.from('calendar_events').select('*').order('date').order('time'),
         supabase.from('journal_entries').select('*').order('created_at', { ascending: false }).limit(20),
         supabase.from('wellness_logs').select('*').order('created_at', { ascending: false }).limit(30),
+        supabase.from('app_settings').select('*'),
+        supabase.from('body_logs').select('*').order('date', { ascending: false }).limit(60),
+        supabase.from('meals').select('*').order('created_at', { ascending: false }).limit(60),
       ])
       if (h.error) throw h.error
       if (t.error) throw t.error
@@ -41,6 +47,9 @@ export function useData() {
       if (e.error) throw e.error
       if (j.error) throw j.error
       if (w.error) throw w.error
+      if (s.error) throw s.error
+      if (bl.error) throw bl.error
+      if (m.error) throw m.error
 
       setHabits(h.data || [])
       setTransactions(t.data || [])
@@ -48,6 +57,13 @@ export function useData() {
       setEvents(groupEventsByDate(e.data || []))
       setJournalEntries(j.data || [])
       setWellnessLogs(w.data || [])
+      setBodyLogs(bl.data || [])
+      setMeals(m.data || [])
+      const settingsObj = (s.data || []).reduce((acc, row) => {
+        acc[row.key] = isNaN(row.value) ? row.value : parseFloat(row.value)
+        return acc
+      }, { usd_cny_rate: 7.1 })
+      setSettings(settingsObj)
     } catch (err) {
       setError(err.message)
       console.error('[useData] Load error:', err)
@@ -59,7 +75,7 @@ export function useData() {
 
   // ── Real-time subscriptions ───────────────────────────────────────────────
   function setupRealtimeSubscriptions() {
-    const tables = ['habits', 'transactions', 'budgets', 'calendar_events', 'journal_entries', 'wellness_logs']
+    const tables = ['habits', 'transactions', 'budgets', 'calendar_events', 'journal_entries', 'wellness_logs', 'body_logs', 'meals']
     return tables.map(table =>
       supabase
         .channel(`realtime:${table}`)
@@ -131,6 +147,9 @@ export function useData() {
     setWellnessLogs([
       { id: 1, sleep_hours: 7.5, sleep_score: 84, energy_level: 7, created_at: new Date().toISOString() },
     ])
+    setBodyLogs([])
+    setMeals([])
+    setSettings({ usd_cny_rate: 7.1, body_goal: 'maintain' })
   }
 
   // ── Habits ────────────────────────────────────────────────────────────────
@@ -333,6 +352,57 @@ export function useData() {
     setWellnessLogs(prev => prev.filter(w => w.id !== id))
   }, [])
 
+  // ── Settings (exchange rate, etc.) ─────────────────────────────────────────
+  const updateSetting = useCallback(async (key, value) => {
+    const { error } = await supabase
+      .from('app_settings')
+      .upsert({ key, value: String(value) }, { onConflict: 'key' })
+    if (error) throw error
+    setSettings(prev => ({ ...prev, [key]: isNaN(value) ? value : parseFloat(value) }))
+  }, [])
+
+  // ── Nutrition: body logs (weight / body fat) ───────────────────────────────
+  const addBodyLog = useCallback(async ({ date, weight = null, bodyFat = null }) => {
+    const today = date || new Date().toISOString().split('T')[0]
+    // Upsert by date so one entry per day
+    const { data, error } = await supabase
+      .from('body_logs')
+      .upsert({ date: today, weight, body_fat: bodyFat }, { onConflict: 'date' })
+      .select()
+      .single()
+    if (error) throw error
+    setBodyLogs(prev => {
+      const without = prev.filter(b => b.date !== today)
+      return [data, ...without].sort((a, b) => b.date.localeCompare(a.date))
+    })
+    return data
+  }, [])
+
+  const deleteBodyLog = useCallback(async (id) => {
+    const { error } = await supabase.from('body_logs').delete().eq('id', id)
+    if (error) throw error
+    setBodyLogs(prev => prev.filter(b => b.id !== id))
+  }, [])
+
+  // ── Nutrition: meals (calories + macros) ───────────────────────────────────
+  const addMeal = useCallback(async ({ name, calories = 0, carbs = 0, protein = 0, fat = 0, date = null }) => {
+    const mealDate = date || new Date().toISOString().split('T')[0]
+    const { data, error } = await supabase
+      .from('meals')
+      .insert({ name, calories, carbs, protein, fat, date: mealDate })
+      .select()
+      .single()
+    if (error) throw error
+    setMeals(prev => [data, ...prev])
+    return data
+  }, [])
+
+  const deleteMeal = useCallback(async (id) => {
+    const { error } = await supabase.from('meals').delete().eq('id', id)
+    if (error) throw error
+    setMeals(prev => prev.filter(m => m.id !== id))
+  }, [])
+
   // ── Derived stats ─────────────────────────────────────────────────────────
   const totalSpent = transactions.reduce((s, t) => s + (t.amount || 0), 0)
   const totalBudget = budgets.reduce((s, b) => s + (b.budget || 0), 0)
@@ -342,7 +412,8 @@ export function useData() {
 
   return {
     // state
-    habits, transactions, budgets, events, journalEntries, wellnessLogs,
+    habits, transactions, budgets, events, journalEntries, wellnessLogs, settings,
+    bodyLogs, meals,
     loading, error,
     // actions
     addHabit, editHabit, toggleHabitDay, markHabitToday, deleteHabit,
@@ -350,6 +421,8 @@ export function useData() {
     addEvent, editEvent, deleteEvent,
     addJournalEntry, updateJournalEntry, deleteJournalEntry,
     addWellnessLog, deleteWellnessLog,
+    updateSetting,
+    addBodyLog, deleteBodyLog, addMeal, deleteMeal,
     reload: loadAll,
     // derived
     totalSpent, totalBudget, maxStreak, habitsDoneToday,

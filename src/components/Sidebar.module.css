@@ -27,9 +27,9 @@
 .logoText {
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   color: var(--text);
+  line-height: 1.2;
 }
 
 .nav {

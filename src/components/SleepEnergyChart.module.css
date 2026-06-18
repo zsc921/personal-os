@@ -1,0 +1,14 @@
+/* src/components/SleepEnergyChart.module.css */
+.wrapper { width: 100%; }
+.svg { width: 100%; height: auto; display: block; }
+
+.legend { display: flex; gap: 16px; margin-bottom: 10px; }
+.legendItem { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+.dotSleep { width: 10px; height: 3px; border-radius: 2px; background: var(--accent); display: inline-block; }
+.dotEnergy { width: 10px; height: 3px; border-radius: 2px; background: var(--amber); display: inline-block; }
+
+.axisLabel { fill: var(--muted); font-size: 9px; }
+.axisLabelEnergy { fill: var(--amber); font-size: 9px; opacity: 0.7; }
+.dateLabel { fill: var(--muted); font-size: 9px; }
+
+.empty { font-size: 13px; color: var(--muted); padding: 12px 0; }

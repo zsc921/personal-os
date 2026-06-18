@@ -2,11 +2,12 @@
 import styles from './Sidebar.module.css'
 
 const NAV = [
-  { id: 'home',     label: 'Home',    icon: '⊞' },
-  { id: 'habits',   label: 'Habits',  icon: '◎' },
-  { id: 'finance',  label: 'Finance', icon: '◈' },
-  { id: 'calendar', label: 'Calendar',icon: '▦' },
-  { id: 'journal',  label: 'Journal', icon: '◉' },
+  { id: 'home',      label: 'Home',      icon: '⊞' },
+  { id: 'nutrition', label: 'Nutrition', icon: '🥗' },
+  { id: 'habits',    label: 'Habits',    icon: '◎' },
+  { id: 'finance',   label: 'Finance',   icon: '◈' },
+  { id: 'calendar',  label: 'Calendar',  icon: '▦' },
+  { id: 'journal',   label: 'Journal',   icon: '◉' },
 ]
 
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
@@ -18,7 +19,7 @@ export default function Sidebar({ activeTab, onTabChange }) {
     <aside className={styles.sidebar}>
       <div className={styles.logo}>
         <div className={styles.logoDot} />
-        <span className={styles.logoText}>OS</span>
+        <span className={styles.logoText}>Anni's Personal OS</span>
       </div>
 
       <nav className={styles.nav}>

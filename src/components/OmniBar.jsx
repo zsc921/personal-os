@@ -33,17 +33,22 @@ Your job:
 1. Detect the intent of the user's natural language input.
 2. Parse all relevant data from it.
 3. Return ONLY a raw JSON object (no markdown, no backticks, no explanation) with:
-   - "module": one of "finance", "calendar", "habits", "journal", "wellness", "unknown"
+   - "module": one of "finance", "calendar", "habits", "journal", "wellness", "nutrition", "unknown"
    - "action": short past-tense description of what you did (e.g. "Logged $15 Food transaction")
    - "data": the parsed payload:
-       finance  → { name (string), amount (number), cat ("Food"|"Transport"|"Shopping"|"Health"|"Other"), icon (emoji) }
+       finance  → { name (string), amount (number), cat ("Food"|"Grocery"|"Transport"|"Shopping"|"Health"|"Home"|"Travel"|"Beauty"|"Sports"|"Utility"|"Other"), icon (emoji) }
        calendar → { date ("YYYY-MM-DD"), time (e.g. "2:00 PM" or "All day"), name (string), tag ("tag-work"|"tag-personal"|"tag-health") }
        habits   → { habitId (number or null if new), name (string), completed (boolean) }
        journal  → { text (string) }
        wellness → { sleepHours (number or null), sleepScore (number 0-100 or null), energyLevel (number 1-10 or null), note (string or null) }
+       nutrition → { kind ("meal"|"body"), name (string, for meals), calories (number), carbs (number), protein (number), fat (number), weight (number kg, for body), bodyFat (number %, for body) }
    - "toast": a friendly single-sentence confirmation
 
 Wellness examples: "slept 7.5 hours" → sleepHours: 7.5. "energy is a 6 today" → energyLevel: 6. "sleep score 82, energy feels low" → sleepScore: 82, energyLevel: 3 (your best estimate from "low").
+
+Nutrition examples: "ate chicken salad, 450 cal, 40g protein, 20g carbs, 15g fat" → kind: meal. "weighed 62kg this morning, body fat 22%" → kind: body, weight: 62, bodyFat: 22. If only some macros are given, estimate the rest reasonably from the food described.
+
+Finance category guidance: "Grocery" = supermarket runs or "groceries." "Food" = restaurants, takeout, coffee, delivery. "Home" = rent, furniture, home supplies, repairs. "Travel" = flights, hotels, trips. "Beauty" = skincare, makeup, salon, spa. "Sports" = gym, classes, sports gear, equipment. "Utility" = electricity, water, internet, phone bills. "Health" = doctor, pharmacy, supplements.
 
 Date context: today = ${TODAY}, tomorrow = ${TOMORROW}. For relative dates like "next Monday", calculate the actual date.
 Existing habit IDs and names: ${JSON.stringify(snapshot.habits)}`

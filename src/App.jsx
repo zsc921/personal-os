@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react'
 import Sidebar from './components/Sidebar'
 import OmniBar from './components/OmniBar'
 import Home from './components/Home'
+import Nutrition from './components/Nutrition'
 import Habits from './components/Habits'
 import Finance from './components/Finance'
 import Calendar from './components/Calendar'
@@ -10,7 +11,7 @@ import Journal from './components/Journal'
 import { useData } from './hooks/useData'
 import './index.css'
 
-const ICONS = { Food: '🛒', Transport: '🚇', Shopping: '📦', Health: '💪', Other: '💳' }
+const ICONS = { Food: '🛒', Grocery: '🥦', Transport: '🚇', Shopping: '📦', Health: '💪', Home: '🏠', Travel: '✈️', Beauty: '💄', Sports: '⚽', Utility: '💡', Other: '💳' }
 
 export default function App() {
   const [tab, setTab] = useState('home')
@@ -65,6 +66,20 @@ export default function App() {
         })
         addToast(toast || action, 'journal')
         setTab('home')
+      } else if (module === 'nutrition' && d) {
+        if (d.kind === 'body') {
+          await data.addBodyLog({ weight: d.weight ?? null, bodyFat: d.bodyFat ?? null })
+        } else {
+          await data.addMeal({
+            name: d.name || 'Meal',
+            calories: d.calories || 0,
+            carbs: d.carbs || 0,
+            protein: d.protein || 0,
+            fat: d.fat || 0,
+          })
+        }
+        addToast(toast || action, 'habit')
+        setTab('nutrition')
       } else {
         addToast("Couldn't determine intent. Try rephrasing.", 'error')
       }
@@ -74,7 +89,7 @@ export default function App() {
     }
   }, [data])
 
-  const titles = { home: 'Good morning', habits: 'Habit tracker', finance: 'Finance', calendar: 'Calendar', journal: 'Voice journal' }
+  const titles = { home: 'Good morning', nutrition: 'Nutrition', habits: 'Habit tracker', finance: 'Finance', calendar: 'Calendar', journal: 'Voice journal' }
 
   return (
     <div className="layout">
@@ -118,6 +133,17 @@ export default function App() {
                   onHabitToggle={(id, di) => data.toggleHabitDay(id, di)}
                 />
               )}
+              {tab === 'nutrition' && (
+                <Nutrition
+                  bodyLogs={data.bodyLogs}
+                  meals={data.meals}
+                  settings={data.settings}
+                  onAddBodyLog={data.addBodyLog}
+                  onAddMeal={data.addMeal}
+                  onDeleteMeal={data.deleteMeal}
+                  onUpdateSetting={data.updateSetting}
+                />
+              )}
               {tab === 'habits' && (
                 <Habits
                   habits={data.habits}
@@ -133,6 +159,8 @@ export default function App() {
                   transactions={data.transactions}
                   totalSpent={data.totalSpent}
                   totalBudget={data.totalBudget}
+                  settings={data.settings}
+                  onUpdateSetting={data.updateSetting}
                   onEditTransaction={data.editTransaction}
                   onDeleteTransaction={data.deleteTransaction}
                 />
