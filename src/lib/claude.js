@@ -24,8 +24,37 @@ export async function callClaude({ system, messages, maxTokens = 1000 }) {
   return text
 }
 
+// Send an image (base64) plus a prompt to Claude vision. Returns parsed text.
+export async function callClaudeWithImage({ system, prompt, imageBase64, mediaType, maxTokens = 1500 }) {
+  return callClaude({
+    system,
+    maxTokens,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageBase64 } },
+        { type: 'text', text: prompt },
+      ],
+    }],
+  })
+}
+
 // Parse JSON from Claude response safely (strips markdown fences if present)
 export function parseJSON(text) {
   const clean = text.replace(/```json|```/g, '').trim()
   return JSON.parse(clean)
+}
+
+// Read a File/Blob into base64 (strip the data URL prefix).
+export function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result
+      const comma = result.indexOf(',')
+      resolve(result.slice(comma + 1))
+    }
+    reader.onerror = () => reject(new Error('Failed to read file'))
+    reader.readAsDataURL(file)
+  })
 }

@@ -420,11 +420,11 @@ export function useData() {
   }, [])
 
   // ── Nutrition: meals (calories + macros) ───────────────────────────────────
-  const addMeal = useCallback(async ({ name, calories = 0, carbs = 0, protein = 0, fat = 0, date = null }) => {
+  const addMeal = useCallback(async ({ name, calories = 0, carbs = 0, protein = 0, fat = 0, date = null, ingredients = [] }) => {
     const mealDate = date || new Date().toISOString().split('T')[0]
     const { data, error } = await supabase
       .from('meals')
-      .insert({ name, calories, carbs, protein, fat, date: mealDate })
+      .insert({ name, calories, carbs, protein, fat, date: mealDate, ingredients })
       .select()
       .single()
     if (error) throw error

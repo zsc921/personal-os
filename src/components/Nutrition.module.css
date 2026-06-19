@@ -48,9 +48,37 @@
 .mealList { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 10px; }
 .mealRow { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
 .mealRow:last-child { border-bottom: none; }
-.mealName { flex: 1; font-size: 13px; color: var(--text); }
-.mealCal { font-size: 12px; color: var(--muted); }
+.mealMain { flex: 1; min-width: 0; }
+.mealName { font-size: 13px; color: var(--text); display: block; }
+.mealIngredients { font-size: 11px; color: var(--muted); display: block; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mealCal { font-size: 12px; color: var(--muted); flex-shrink: 0; }
 .deleteBtn { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 0 2px; line-height: 1; opacity: 0; transition: color .15s, opacity .15s; }
 .mealRow:hover .deleteBtn { opacity: 1; }
 .deleteBtn:hover { color: var(--red); }
 .empty { font-size: 13px; color: var(--muted); padding: 8px 0; }
+
+.headerActions { display: flex; gap: 6px; align-items: center; }
+.photoBtn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 14px; cursor: pointer; font-family: inherit; transition: border-color .15s; }
+.photoBtn:hover { border-color: var(--accent); }
+
+.photoPreview { position: relative; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+.previewImg { width: 100%; max-height: 280px; object-fit: cover; display: block; }
+.photoOverlay { position: absolute; inset: 0; background: rgba(14,14,17,0.85); display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--accent); font-size: 13px; font-weight: 500; }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--accent-dim); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.confidenceBadge { position: absolute; top: 8px; right: 8px; font-size: 10px; padding: 3px 8px; border-radius: 12px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }
+.conf_high { background: rgba(52,211,153,.18); color: var(--green); border: 1px solid rgba(52,211,153,.4); }
+.conf_medium { background: rgba(251,191,36,.15); color: var(--amber); border: 1px solid rgba(251,191,36,.4); }
+.conf_low { background: rgba(248,113,113,.15); color: var(--red); border: 1px solid rgba(248,113,113,.4); }
+
+.photoError { font-size: 12px; color: var(--red); padding: 4px 0; }
+
+.ingredientList { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 2px 0; }
+.ingredientLabel { font-size: 11px; color: var(--muted); }
+.ingredientTag { font-size: 11px; padding: 2px 8px; background: var(--accent-dim); color: var(--accent); border-radius: 10px; }
+
+.portionNote { font-size: 11px; color: var(--muted); font-style: italic; padding: 4px 0; }
+
+.mealFormBtns { display: flex; gap: 8px; }
+.ghostBtn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-size: 12px; padding: 7px 12px; cursor: pointer; font-family: inherit; }

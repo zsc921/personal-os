@@ -1,6 +1,6 @@
 // src/components/Nutrition.jsx
-import { useState, useEffect } from 'react'
-import { callClaude, parseJSON } from '../lib/claude'
+import { useState, useEffect, useRef } from 'react'
+import { callClaude, callClaudeWithImage, parseJSON, fileToBase64 } from '../lib/claude'
 import BodyTrendChart from './BodyTrendChart'
 import styles from './Nutrition.module.css'
 
@@ -13,7 +13,12 @@ export default function Nutrition({ bodyLogs, meals, settings, onAddBodyLog, onA
   const [bodyFat, setBodyFat] = useState('')
 
   const [showMealForm, setShowMealForm] = useState(false)
-  const [mealFields, setMealFields] = useState({ name: '', calories: '', carbs: '', protein: '', fat: '' })
+  const [mealFields, setMealFields] = useState({ name: '', calories: '', carbs: '', protein: '', fat: '', ingredients: [] })
+  const [photoPreview, setPhotoPreview] = useState(null)
+  const [analyzingPhoto, setAnalyzingPhoto] = useState(false)
+  const [photoError, setPhotoError] = useState(null)
+  const fileInputRef = useRef(null)
+  const cameraInputRef = useRef(null)
 
   const [targets, setTargets] = useState(null)
   const [insight, setInsight] = useState(null)
@@ -85,9 +90,75 @@ Today so far: ${todayTotals.calories}cal, ${todayTotals.protein}g protein, ${tod
       carbs: parseFloat(mealFields.carbs) || 0,
       protein: parseFloat(mealFields.protein) || 0,
       fat: parseFloat(mealFields.fat) || 0,
+      ingredients: mealFields.ingredients || [],
     })
-    setMealFields({ name: '', calories: '', carbs: '', protein: '', fat: '' })
+    resetMealForm()
+  }
+
+  function resetMealForm() {
+    setMealFields({ name: '', calories: '', carbs: '', protein: '', fat: '', ingredients: [] })
+    setPhotoPreview(null)
+    setPhotoError(null)
     setShowMealForm(false)
+  }
+
+  async function handlePhotoSelect(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setPhotoError('Please select an image file.')
+      return
+    }
+    setPhotoError(null)
+    setAnalyzingPhoto(true)
+
+    // Show local preview right away
+    const previewUrl = URL.createObjectURL(file)
+    setPhotoPreview(previewUrl)
+    setShowMealForm(true)
+
+    try {
+      const base64 = await fileToBase64(file)
+      const mediaType = file.type
+      const system = `You are a nutrition AI that estimates calorie and macro content from a photo of a meal.
+Return ONLY a raw JSON object (no markdown, no backticks) with:
+- "name": short descriptive name of the meal (e.g. "Grilled chicken with rice and broccoli")
+- "ingredients": array of strings identifying visible ingredients (e.g. ["chicken breast", "white rice", "broccoli", "olive oil"])
+- "portion_notes": brief sentence on estimated portion sizes
+- "calories": estimated total calories (number)
+- "protein": estimated protein in grams (number)
+- "carbs": estimated carbs in grams (number)
+- "fat": estimated fat in grams (number)
+- "confidence": "high" | "medium" | "low" — based on visibility, occlusion, and clarity of portions
+
+Estimate generously when uncertain (account for likely hidden oils, sauces, dressings). When in doubt about size, assume a standard serving.`
+      const raw = await callClaudeWithImage({
+        system,
+        prompt: 'Analyze this meal photo. Return only the JSON object as specified.',
+        imageBase64: base64,
+        mediaType,
+        maxTokens: 1500,
+      })
+      const parsed = parseJSON(raw)
+      setMealFields({
+        name: parsed.name || '',
+        calories: String(Math.round(parsed.calories || 0)),
+        protein: String(Math.round(parsed.protein || 0)),
+        carbs: String(Math.round(parsed.carbs || 0)),
+        fat: String(Math.round(parsed.fat || 0)),
+        ingredients: parsed.ingredients || [],
+        portionNotes: parsed.portion_notes || '',
+        confidence: parsed.confidence || 'medium',
+      })
+    } catch (err) {
+      console.error('[Nutrition] Photo analysis failed:', err)
+      setPhotoError('Could not analyze photo. You can still enter values manually.')
+    } finally {
+      setAnalyzingPhoto(false)
+      // Reset the file inputs so the user can pick the same file again later if needed
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      if (cameraInputRef.current) cameraInputRef.current.value = ''
+    }
   }
 
   function MacroBar({ label, value, target, color }) {
@@ -182,18 +253,61 @@ Today so far: ${todayTotals.calories}cal, ${todayTotals.protein}g protein, ${tod
         <div className={styles.card}>
           <div className={styles.cardHeader}>
             <span className={styles.cardTitle}>Today's nutrition</span>
-            <button className={styles.addBtn} onClick={() => setShowMealForm(s => !s)}>+ Meal</button>
+            <div className={styles.headerActions}>
+              <button className={styles.photoBtn} onClick={() => cameraInputRef.current?.click()} title="Take a photo">📷</button>
+              <button className={styles.photoBtn} onClick={() => fileInputRef.current?.click()} title="Upload a photo">🖼</button>
+              <button className={styles.addBtn} onClick={() => setShowMealForm(s => !s)}>+ Meal</button>
+            </div>
           </div>
+
+          {/* Hidden inputs for camera and file selection */}
+          <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handlePhotoSelect} />
+          <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoSelect} />
+
           {showMealForm && (
             <div className={styles.mealForm}>
+              {photoPreview && (
+                <div className={styles.photoPreview}>
+                  <img src={photoPreview} alt="Meal" className={styles.previewImg} />
+                  {analyzingPhoto && (
+                    <div className={styles.photoOverlay}>
+                      <span className={styles.spinner} /> Analyzing meal…
+                    </div>
+                  )}
+                  {mealFields.confidence && !analyzingPhoto && (
+                    <div className={`${styles.confidenceBadge} ${styles[`conf_${mealFields.confidence}`]}`}>
+                      {mealFields.confidence} confidence
+                    </div>
+                  )}
+                </div>
+              )}
+              {photoError && <p className={styles.photoError}>{photoError}</p>}
+
               <input className={styles.input} placeholder="Meal name" value={mealFields.name} onChange={e => setMealFields(f => ({ ...f, name: e.target.value }))} style={{ width: '100%' }} />
+
+              {mealFields.ingredients && mealFields.ingredients.length > 0 && (
+                <div className={styles.ingredientList}>
+                  <span className={styles.ingredientLabel}>Ingredients · </span>
+                  {mealFields.ingredients.map((ing, i) => (
+                    <span key={i} className={styles.ingredientTag}>{ing}</span>
+                  ))}
+                </div>
+              )}
+
+              {mealFields.portionNotes && (
+                <p className={styles.portionNote}>📏 {mealFields.portionNotes}</p>
+              )}
+
               <div className={styles.mealMacroInputs}>
                 <input className={styles.input} type="number" placeholder="cal" value={mealFields.calories} onChange={e => setMealFields(f => ({ ...f, calories: e.target.value }))} />
                 <input className={styles.input} type="number" placeholder="protein" value={mealFields.protein} onChange={e => setMealFields(f => ({ ...f, protein: e.target.value }))} />
                 <input className={styles.input} type="number" placeholder="carbs" value={mealFields.carbs} onChange={e => setMealFields(f => ({ ...f, carbs: e.target.value }))} />
                 <input className={styles.input} type="number" placeholder="fat" value={mealFields.fat} onChange={e => setMealFields(f => ({ ...f, fat: e.target.value }))} />
               </div>
-              <button className={styles.accentBtn} onClick={saveMeal}>Add meal</button>
+              <div className={styles.mealFormBtns}>
+                <button className={styles.accentBtn} onClick={saveMeal} disabled={analyzingPhoto}>Save meal</button>
+                <button className={styles.ghostBtn} onClick={resetMealForm}>Cancel</button>
+              </div>
               <p className={styles.hint}>Or use the command bar: "Ate chicken salad, 450 cal, 40g protein"</p>
             </div>
           )}
@@ -207,7 +321,12 @@ Today so far: ${todayTotals.calories}cal, ${todayTotals.protein}g protein, ${tod
               <p className={styles.empty}>No meals logged today.</p>
             ) : todayMeals.map(m => (
               <div key={m.id} className={styles.mealRow}>
-                <span className={styles.mealName}>{m.name}</span>
+                <div className={styles.mealMain}>
+                  <span className={styles.mealName}>{m.name}</span>
+                  {m.ingredients && m.ingredients.length > 0 && (
+                    <span className={styles.mealIngredients}>{m.ingredients.slice(0, 4).join(', ')}{m.ingredients.length > 4 ? '…' : ''}</span>
+                  )}
+                </div>
                 <span className={styles.mealCal}>{m.calories} cal</span>
                 <button className={styles.deleteBtn} onClick={() => onDeleteMeal(m.id)}>×</button>
               </div>
