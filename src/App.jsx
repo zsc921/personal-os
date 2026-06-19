@@ -160,9 +160,14 @@ export default function App() {
                   totalSpent={data.totalSpent}
                   totalBudget={data.totalBudget}
                   settings={data.settings}
+                  spendingHistory={data.spendingHistory}
                   onUpdateSetting={data.updateSetting}
                   onEditTransaction={data.editTransaction}
                   onDeleteTransaction={data.deleteTransaction}
+                  onEditBudget={data.editBudget}
+                  onAddBudget={data.addBudget}
+                  onDeleteBudget={data.deleteBudget}
+                  onResetMonthlySpend={data.resetMonthlySpend}
                 />
               )}
               {tab === 'calendar' && (

@@ -16,6 +16,7 @@ export function useData() {
   const [wellnessLogs, setWellnessLogs] = useState([])
   const [bodyLogs, setBodyLogs] = useState([])
   const [meals, setMeals] = useState([])
+  const [spendingHistory, setSpendingHistory] = useState([])
   const [settings, setSettings] = useState({ usd_cny_rate: 7.1 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -30,7 +31,7 @@ export function useData() {
   async function loadAll() {
     setLoading(true)
     try {
-      const [h, t, b, e, j, w, s, bl, m] = await Promise.all([
+      const [h, t, b, e, j, w, s, bl, m, sh] = await Promise.all([
         supabase.from('habits').select('*').order('created_at'),
         supabase.from('transactions').select('*').order('created_at', { ascending: false }).limit(20),
         supabase.from('budgets').select('*').order('cat'),
@@ -40,6 +41,7 @@ export function useData() {
         supabase.from('app_settings').select('*'),
         supabase.from('body_logs').select('*').order('date', { ascending: false }).limit(60),
         supabase.from('meals').select('*').order('created_at', { ascending: false }).limit(60),
+        supabase.from('spending_history').select('*').order('year', { ascending: false }).order('month', { ascending: false }),
       ])
       if (h.error) throw h.error
       if (t.error) throw t.error
@@ -50,6 +52,7 @@ export function useData() {
       if (s.error) throw s.error
       if (bl.error) throw bl.error
       if (m.error) throw m.error
+      if (sh.error) throw sh.error
 
       setHabits(h.data || [])
       setTransactions(t.data || [])
@@ -59,6 +62,7 @@ export function useData() {
       setWellnessLogs(w.data || [])
       setBodyLogs(bl.data || [])
       setMeals(m.data || [])
+      setSpendingHistory(sh.data || [])
       const settingsObj = (s.data || []).reduce((acc, row) => {
         acc[row.key] = isNaN(row.value) ? row.value : parseFloat(row.value)
         return acc
@@ -352,6 +356,37 @@ export function useData() {
     setWellnessLogs(prev => prev.filter(w => w.id !== id))
   }, [])
 
+  // ── Budget categories ─────────────────────────────────────────────────────
+  const editBudget = useCallback(async (budgetId, updates) => {
+    const { error } = await supabase.from('budgets').update(updates).eq('id', budgetId)
+    if (error) throw error
+    setBudgets(prev => prev.map(b => b.id === budgetId ? { ...b, ...updates } : b))
+  }, [])
+
+  const addBudget = useCallback(async ({ cat, budget, color = '#A78BFA' }) => {
+    const { data, error } = await supabase
+      .from('budgets')
+      .insert({ cat, budget, spent: 0, color })
+      .select()
+      .single()
+    if (error) throw error
+    setBudgets(prev => [...prev, data].sort((a, b) => a.cat.localeCompare(b.cat)))
+  }, [])
+
+  const deleteBudget = useCallback(async (budgetId) => {
+    const { error } = await supabase.from('budgets').delete().eq('id', budgetId)
+    if (error) throw error
+    setBudgets(prev => prev.filter(b => b.id !== budgetId))
+  }, [])
+
+  const resetMonthlySpend = useCallback(async () => {
+    // Calls the Supabase function that snapshots current spending to history, then resets.
+    // Same function is run automatically by pg_cron on the 1st of each month.
+    const { error } = await supabase.rpc('archive_and_reset_month')
+    if (error) throw error
+    await loadAll()
+  }, [])
+
   // ── Settings (exchange rate, etc.) ─────────────────────────────────────────
   const updateSetting = useCallback(async (key, value) => {
     const { error } = await supabase
@@ -413,11 +448,12 @@ export function useData() {
   return {
     // state
     habits, transactions, budgets, events, journalEntries, wellnessLogs, settings,
-    bodyLogs, meals,
+    bodyLogs, meals, spendingHistory,
     loading, error,
     // actions
     addHabit, editHabit, toggleHabitDay, markHabitToday, deleteHabit,
     addTransaction, editTransaction, deleteTransaction,
+    editBudget, addBudget, deleteBudget, resetMonthlySpend,
     addEvent, editEvent, deleteEvent,
     addJournalEntry, updateJournalEntry, deleteJournalEntry,
     addWellnessLog, deleteWellnessLog,

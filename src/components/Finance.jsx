@@ -1,17 +1,29 @@
 // src/components/Finance.jsx
 import { useState } from 'react'
+import YTDChart from './YTDChart'
 import styles from './Finance.module.css'
 
 const CATS = ['Food', 'Grocery', 'Transport', 'Shopping', 'Health', 'Home', 'Travel', 'Beauty', 'Sports', 'Utility', 'Other']
 const ICONS = { Food: '🛒', Grocery: '🥦', Transport: '🚇', Shopping: '📦', Health: '💪', Home: '🏠', Travel: '✈️', Beauty: '💄', Sports: '⚽', Utility: '💡', Other: '💳' }
 
-export default function Finance({ budgets, transactions, totalSpent, totalBudget, onDeleteTransaction, onEditTransaction, settings, onUpdateSetting }) {
+export default function Finance({
+  budgets, transactions, totalSpent, totalBudget,
+  onDeleteTransaction, onEditTransaction, settings, onUpdateSetting,
+  onEditBudget, onAddBudget, onDeleteBudget, onResetMonthlySpend,
+  spendingHistory = [],
+}) {
   const remaining = totalBudget - totalSpent
   const overBudget = budgets.filter(b => b.spent > b.budget)
   const [editingId, setEditingId] = useState(null)
   const [editFields, setEditFields] = useState({})
   const [editingRate, setEditingRate] = useState(false)
   const [rateInput, setRateInput] = useState('')
+
+  // Budget editor state
+  const [planMode, setPlanMode] = useState(false)
+  const [budgetEdits, setBudgetEdits] = useState({})
+  const [newCat, setNewCat] = useState('')
+  const [newAmt, setNewAmt] = useState('')
 
   const rate = settings?.usd_cny_rate || 7.1
   const toCny = usd => (usd * rate).toLocaleString('en-US', { maximumFractionDigits: 0 })
@@ -20,6 +32,32 @@ export default function Finance({ budgets, transactions, totalSpent, totalBudget
     const r = parseFloat(rateInput)
     if (!isNaN(r) && r > 0) await onUpdateSetting('usd_cny_rate', r)
     setEditingRate(false)
+  }
+
+  // Start planning: snapshot all current budget values into local state
+  function startPlanning() {
+    const snapshot = {}
+    budgets.forEach(b => { snapshot[b.id] = b.budget })
+    setBudgetEdits(snapshot)
+    setPlanMode(true)
+  }
+
+  async function saveAllBudgets() {
+    // Save only changed values
+    const changes = budgets.filter(b => budgetEdits[b.id] !== undefined && parseFloat(budgetEdits[b.id]) !== b.budget)
+    await Promise.all(changes.map(b => onEditBudget(b.id, { budget: parseFloat(budgetEdits[b.id]) || 0 })))
+    setPlanMode(false)
+  }
+
+  async function handleAddCategory() {
+    if (!newCat.trim() || !newAmt) return
+    await onAddBudget({ cat: newCat.trim(), budget: parseFloat(newAmt) || 0 })
+    setNewCat(''); setNewAmt('')
+  }
+
+  async function handleResetSpend() {
+    if (!confirm('Reset all spent amounts to $0? This is useful at the start of a new month.')) return
+    await onResetMonthlySpend()
   }
 
   function startEdit(t) {
@@ -94,12 +132,52 @@ export default function Finance({ budgets, transactions, totalSpent, totalBudget
         </div>
       )}
 
+      <YTDChart history={spendingHistory} budgets={budgets} toCny={toCny} />
+
       <div className={styles.grid2}>
         <div className={styles.card}>
-          <div className={styles.cardHeader}><span className={styles.cardTitle}>Budget vs spend</span></div>
+          <div className={styles.cardHeader}>
+            <span className={styles.cardTitle}>Budget vs spend</span>
+            {planMode ? (
+              <div className={styles.headerBtns}>
+                <button className={styles.accentBtn} onClick={saveAllBudgets}>Save plan</button>
+                <button className={styles.ghostBtn} onClick={() => setPlanMode(false)}>Cancel</button>
+              </div>
+            ) : (
+              <div className={styles.headerBtns}>
+                <button className={styles.addBtn} onClick={startPlanning}>✎ Plan budgets</button>
+                <button className={styles.addBtn} onClick={handleResetSpend} title="Reset spent amounts for new month">↻ New month</button>
+              </div>
+            )}
+          </div>
+
           {budgets.map(b => {
             const pct = Math.min(100, Math.round((b.spent / b.budget) * 100))
             const over = b.spent > b.budget
+
+            if (planMode) {
+              return (
+                <div key={b.id} className={styles.budgetRow}>
+                  <div className={styles.planRow}>
+                    <span className={styles.budgetCat}>{b.cat}</span>
+                    <span className={styles.dollarSign}>$</span>
+                    <input
+                      className={styles.budgetInput}
+                      type="number"
+                      step="50"
+                      value={budgetEdits[b.id] ?? b.budget}
+                      onChange={e => setBudgetEdits(prev => ({ ...prev, [b.id]: e.target.value }))}
+                    />
+                    <button
+                      className={styles.delBtn}
+                      onClick={() => { if (confirm(`Delete ${b.cat} category? Transactions will not be deleted.`)) onDeleteBudget(b.id) }}
+                      title="Delete category"
+                    >×</button>
+                  </div>
+                </div>
+              )
+            }
+
             return (
               <div key={b.id} className={styles.budgetRow}>
                 <div className={styles.budgetMeta}>
@@ -115,7 +193,30 @@ export default function Finance({ budgets, transactions, totalSpent, totalBudget
               </div>
             )
           })}
-          <p className={styles.hint}>Add transactions via the command bar: "Spent $X on Y"</p>
+
+          {planMode && (
+            <div className={styles.addCatForm}>
+              <input
+                className={styles.budgetInput}
+                placeholder="New category"
+                value={newCat}
+                onChange={e => setNewCat(e.target.value)}
+                style={{ flex: 1 }}
+              />
+              <span className={styles.dollarSign}>$</span>
+              <input
+                className={styles.budgetInput}
+                placeholder="Amount"
+                type="number"
+                value={newAmt}
+                onChange={e => setNewAmt(e.target.value)}
+                style={{ width: 80 }}
+              />
+              <button className={styles.accentBtn} onClick={handleAddCategory}>Add</button>
+            </div>
+          )}
+
+          {!planMode && <p className={styles.hint}>Add transactions via the command bar: "Spent $X on Y"</p>}
         </div>
 
         <div className={styles.card}>
