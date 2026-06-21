@@ -77,3 +77,9 @@
 .tag-google { background: rgba(251,191,36,.1); color: var(--amber); }
 
 .empty { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .grid2 { grid-template-columns: 1fr; }
+  .googleBar { flex-direction: column; align-items: flex-start; gap: 8px; }
+}

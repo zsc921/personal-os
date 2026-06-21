@@ -168,3 +168,58 @@ body {
 .toast-journal .toast-dot { background: var(--accent); }
 .toast-error .toast-dot { background: var(--red); }
 .toast-default .toast-dot { background: var(--accent); }
+
+/* ── Responsive: tablet & mobile ──────────────────────────────── */
+@media (max-width: 768px) {
+  html, body, #root {
+    height: 100%;
+    overflow: auto;
+  }
+
+  .layout {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .main {
+    overflow: visible;
+  }
+
+  .topbar {
+    padding: 0 16px;
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 52px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .topbar-brief {
+    font-size: 10px;
+    padding: 4px 10px;
+  }
+
+  .content {
+    padding: 14px;
+    padding-bottom: 76px;
+    overflow-y: visible;
+  }
+
+  .toast-area {
+    left: 12px;
+    right: 12px;
+    top: 8px;
+  }
+
+  .toast {
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar-title { font-size: 14px; }
+  .topbar-brief { display: none; }
+}

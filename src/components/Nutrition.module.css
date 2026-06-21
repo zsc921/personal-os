@@ -82,3 +82,13 @@
 
 .mealFormBtns { display: flex; gap: 8px; }
 .ghostBtn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-size: 12px; padding: 7px 12px; cursor: pointer; font-family: inherit; }
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .statsRow { grid-template-columns: 1fr; }
+  .grid2 { grid-template-columns: 1fr; }
+  .goalBar { flex-direction: column; align-items: flex-start; gap: 10px; }
+}
+@media (max-width: 480px) {
+  .mealMacroInputs { grid-template-columns: repeat(2, 1fr); }
+}

@@ -1,7 +1,12 @@
 /* src/components/Habits.module.css */
 .wrapper {}
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
-.cardHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.cardHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+.headerRight { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.viewToggle { display: flex; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 2px; }
+.toggleBtn { background: none; border: none; color: var(--muted); font-size: 11px; padding: 4px 10px; cursor: pointer; font-family: inherit; border-radius: 4px; transition: background .15s, color .15s; }
+.toggleActive { background: var(--accent-dim); color: var(--accent); font-weight: 500; }
+.dayDot.future { opacity: 0.35; cursor: default; }
 .cardTitle { font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .count { font-size: 11px; color: var(--muted); }
 .empty { font-size: 13px; color: var(--muted); padding: 8px 0 14px; }
@@ -42,3 +47,12 @@
 .ghostBtn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-size: 12px; padding: 7px 12px; cursor: pointer; font-family: inherit; }
 .addBtn { margin-top: 14px; background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); padding: 7px 14px; font-size: 12px; cursor: pointer; font-family: inherit; transition: border-color .15s, color .15s; }
 .addBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .habitRow { flex-wrap: wrap; gap: 8px; }
+  .habitName { width: 100%; }
+  .days { order: 3; width: 100%; justify-content: space-between; }
+  .dayDot { width: 28px; height: 28px; font-size: 10px; }
+  .streak { order: 2; }
+}

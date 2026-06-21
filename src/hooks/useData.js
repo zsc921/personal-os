@@ -9,6 +9,7 @@ const TODAY = new Date().toISOString().split('T')[0]
 
 export function useData() {
   const [habits, setHabits] = useState([])
+  const [habitLogs, setHabitLogs] = useState([])
   const [transactions, setTransactions] = useState([])
   const [budgets, setBudgets] = useState([])
   const [events, setEvents] = useState({})
@@ -31,8 +32,9 @@ export function useData() {
   async function loadAll() {
     setLoading(true)
     try {
-      const [h, t, b, e, j, w, s, bl, m, sh] = await Promise.all([
+      const [h, hl, t, b, e, j, w, s, bl, m, sh] = await Promise.all([
         supabase.from('habits').select('*').order('created_at'),
+        supabase.from('habit_logs').select('*').order('date', { ascending: false }).limit(400),
         supabase.from('transactions').select('*').order('created_at', { ascending: false }).limit(20),
         supabase.from('budgets').select('*').order('cat'),
         supabase.from('calendar_events').select('*').order('date').order('time'),
@@ -44,6 +46,7 @@ export function useData() {
         supabase.from('spending_history').select('*').order('year', { ascending: false }).order('month', { ascending: false }),
       ])
       if (h.error) throw h.error
+      if (hl.error) throw hl.error
       if (t.error) throw t.error
       if (b.error) throw b.error
       if (e.error) throw e.error
@@ -55,6 +58,7 @@ export function useData() {
       if (sh.error) throw sh.error
 
       setHabits(h.data || [])
+      setHabitLogs(hl.data || [])
       setTransactions(t.data || [])
       setBudgets(b.data || [])
       setEvents(groupEventsByDate(e.data || []))
@@ -79,7 +83,7 @@ export function useData() {
 
   // ── Real-time subscriptions ───────────────────────────────────────────────
   function setupRealtimeSubscriptions() {
-    const tables = ['habits', 'transactions', 'budgets', 'calendar_events', 'journal_entries', 'wellness_logs', 'body_logs', 'meals']
+    const tables = ['habits', 'habit_logs', 'transactions', 'budgets', 'calendar_events', 'journal_entries', 'wellness_logs', 'body_logs', 'meals']
     return tables.map(table =>
       supabase
         .channel(`realtime:${table}`)
@@ -96,28 +100,51 @@ export function useData() {
     }, {})
   }
 
-  // Counts consecutive done-days walking backward from today through the week array.
-  // NOTE: `days` is a day-of-week array (Sun=0..Sat=6), so this only reflects the
-  // current week. See note to product owner about moving to a date-keyed log for
-  // true multi-week streaks.
-  function computeStreak(days) {
-    const today = new Date().getDay()
+  // Build a quick lookup: habitId -> Set of completed date strings ('YYYY-MM-DD')
+  function buildCompletionMap(logs) {    const map = {}
+    logs.forEach(l => {
+      if (!map[l.habit_id]) map[l.habit_id] = new Set()
+      if (l.completed) map[l.habit_id].add(l.date)
+    })
+    return map
+  }
+
+  function dateStr(d) { return d.toISOString().split('T')[0] }
+
+  // True consecutive-day streak ending today (or yesterday, if today not yet done),
+  // walking backward through real calendar dates rather than a fixed weekly array.
+  function computeStreakFromLogs(habitId, logs) {
+    const completionMap = buildCompletionMap(logs)
+    const doneDates = completionMap[habitId] || new Set()
     let streak = 0
-    for (let i = 0; i <= 6; i++) {
-      const idx = (today - i + 7) % 7
-      if (days[idx]) streak++
-      else break
+    let cursor = new Date()
+    // If today isn't done yet, start counting from yesterday so an unbroken
+    // streak doesn't appear to reset to 0 before the day is even over.
+    if (!doneDates.has(dateStr(cursor))) {
+      cursor.setDate(cursor.getDate() - 1)
+    }
+    while (doneDates.has(dateStr(cursor))) {
+      streak++
+      cursor.setDate(cursor.getDate() - 1)
     }
     return streak
   }
 
   // ── Fallback data (when Supabase not yet configured) ──────────────────────
   function loadFallbackData() {
+    const today = new Date()
+    const d = (offset) => { const x = new Date(today); x.setDate(x.getDate() - offset); return dateStr(x) }
     setHabits([
-      { id: 1, name: 'Morning meditation', streak: 5, days: [1,1,1,0,1,1,0] },
-      { id: 2, name: 'Exercise', streak: 3, days: [1,1,0,1,1,0,0] },
-      { id: 3, name: 'Read 20 mins', streak: 2, days: [1,0,1,1,0,0,0] },
-      { id: 4, name: 'No social media AM', streak: 5, days: [1,1,1,1,1,0,0] },
+      { id: 1, name: 'Morning meditation' },
+      { id: 2, name: 'Exercise' },
+      { id: 3, name: 'Read 20 mins' },
+    ])
+    setHabitLogs([
+      { id: 1, habit_id: 1, date: d(0), completed: true },
+      { id: 2, habit_id: 1, date: d(1), completed: true },
+      { id: 3, habit_id: 1, date: d(2), completed: true },
+      { id: 4, habit_id: 2, date: d(0), completed: true },
+      { id: 5, habit_id: 2, date: d(1), completed: true },
     ])
     setTransactions([
       { id: 1, name: 'Whole Foods', cat: 'Food', amount: 87, icon: '🛒', created_at: '2026-06-12' },
@@ -158,50 +185,55 @@ export function useData() {
 
   // ── Habits ────────────────────────────────────────────────────────────────
   const addHabit = useCallback(async (name) => {
-    const days = [0,0,0,0,0,0,0]
     const { data, error } = await supabase
       .from('habits')
-      .insert({ name, streak: 0, days })
+      .insert({ name })
       .select()
       .single()
     if (error) throw error
     setHabits(prev => [...prev, data])
   }, [])
 
-  const toggleHabitDay = useCallback(async (habitId, dayIndex) => {
-    const habit = habits.find(h => h.id === habitId)
-    if (!habit) return
-    const newDays = [...habit.days]
-    newDays[dayIndex] = newDays[dayIndex] ? 0 : 1
-    const streak = computeStreak(newDays)
-    const { error } = await supabase
-      .from('habits')
-      .update({ days: newDays, streak })
-      .eq('id', habitId)
+  // Toggle completion for a habit on a specific date (defaults to today).
+  // Upserts into habit_logs keyed on (habit_id, date) so each day has one row.
+  const toggleHabitDate = useCallback(async (habitId, date = null) => {
+    const day = date || dateStr(new Date())
+    const existing = habitLogs.find(l => l.habit_id === habitId && l.date === day)
+    const newCompleted = !existing?.completed
+
+    const { data, error } = await supabase
+      .from('habit_logs')
+      .upsert({ habit_id: habitId, date: day, completed: newCompleted }, { onConflict: 'habit_id,date' })
+      .select()
+      .single()
     if (error) throw error
-    setHabits(prev => prev.map(h => h.id === habitId ? { ...h, days: newDays, streak } : h))
-  }, [habits])
+
+    setHabitLogs(prev => {
+      const without = prev.filter(l => !(l.habit_id === habitId && l.date === day))
+      return [data, ...without]
+    })
+  }, [habitLogs])
 
   const markHabitToday = useCallback(async (habitId, done = true) => {
-    const today = new Date().getDay()
-    const habit = habits.find(h => h.id === habitId)
-    if (!habit) return
-    const newDays = [...habit.days]
-    newDays[today] = done ? 1 : 0
-    const streak = computeStreak(newDays)
-    const { error } = await supabase
-      .from('habits')
-      .update({ days: newDays, streak })
-      .eq('id', habitId)
+    const day = dateStr(new Date())
+    const { data, error } = await supabase
+      .from('habit_logs')
+      .upsert({ habit_id: habitId, date: day, completed: done }, { onConflict: 'habit_id,date' })
+      .select()
+      .single()
     if (error) throw error
-    setHabits(prev => prev.map(h => h.id === habitId ? { ...h, days: newDays, streak } : h))
-  }, [habits])
+    setHabitLogs(prev => {
+      const without = prev.filter(l => !(l.habit_id === habitId && l.date === day))
+      return [data, ...without]
+    })
+  }, [])
 
   // ── Delete habit ─────────────────────────────────────────────────────────
   const deleteHabit = useCallback(async (habitId) => {
     const { error } = await supabase.from('habits').delete().eq('id', habitId)
     if (error) throw error
     setHabits(prev => prev.filter(h => h.id !== habitId))
+    setHabitLogs(prev => prev.filter(l => l.habit_id !== habitId))
   }, [])
 
   // ── Edit habit name ───────────────────────────────────────────────────────
@@ -441,17 +473,28 @@ export function useData() {
   // ── Derived stats ─────────────────────────────────────────────────────────
   const totalSpent = transactions.reduce((s, t) => s + (t.amount || 0), 0)
   const totalBudget = budgets.reduce((s, b) => s + (b.budget || 0), 0)
-  const maxStreak = Math.max(...habits.map(h => h.streak || 0), 0)
-  const todayDow = new Date().getDay()
-  const habitsDoneToday = habits.filter(h => h.days?.[todayDow]).length
+
+  const todayKey = dateStr(new Date())
+  const completionMap = buildCompletionMap(habitLogs)
+
+  // Enrich each habit with a live-computed streak and "done today" flag —
+  // derived fresh from habitLogs every render, never stored/stale.
+  const habitsWithStreaks = habits.map(h => ({
+    ...h,
+    streak: computeStreakFromLogs(h.id, habitLogs),
+    doneToday: completionMap[h.id]?.has(todayKey) || false,
+  }))
+
+  const maxStreak = Math.max(...habitsWithStreaks.map(h => h.streak), 0)
+  const habitsDoneToday = habitsWithStreaks.filter(h => h.doneToday).length
 
   return {
     // state
-    habits, transactions, budgets, events, journalEntries, wellnessLogs, settings,
+    habits: habitsWithStreaks, habitLogs, transactions, budgets, events, journalEntries, wellnessLogs, settings,
     bodyLogs, meals, spendingHistory,
     loading, error,
     // actions
-    addHabit, editHabit, toggleHabitDay, markHabitToday, deleteHabit,
+    addHabit, editHabit, toggleHabitDate, markHabitToday, deleteHabit,
     addTransaction, editTransaction, deleteTransaction,
     editBudget, addBudget, deleteBudget, resetMonthlySpend,
     addEvent, editEvent, deleteEvent,

@@ -94,3 +94,57 @@
   font-weight: 500;
   color: var(--text);
 }
+
+/* ── Responsive: collapse to bottom tab bar on mobile ───────────── */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    border-right: none;
+    border-top: 1px solid var(--border);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    order: 2;
+  }
+
+  .logo, .date {
+    display: none;
+  }
+
+  .nav {
+    display: flex;
+    flex: 1;
+    padding: 0;
+    overflow-x: auto;
+  }
+
+  .sectionLabel {
+    display: none;
+  }
+
+  .navItem {
+    flex-direction: column;
+    flex: 1;
+    min-width: 56px;
+    gap: 3px;
+    padding: 8px 4px 10px;
+    border-left: none;
+    border-top: 2px solid transparent;
+    font-size: 9px;
+    text-align: center;
+    align-items: center;
+    white-space: nowrap;
+  }
+
+  .navItem.active {
+    border-left-color: transparent;
+    border-top-color: var(--accent);
+  }
+
+  .navIcon {
+    font-size: 18px;
+  }
+}

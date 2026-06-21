@@ -83,3 +83,9 @@
   color: var(--accent);
   opacity: 0.75;
 }
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .wrapper { padding: 10px 14px; }
+  .hint { display: none; }
+}

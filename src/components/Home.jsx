@@ -17,10 +17,9 @@ export default function Home({ data, onTabChange, onHabitToggle }) {
 
   async function loadBriefing() {
     setBriefLoading(true)
-    const todayDow = new Date().getDay()
     const overBudget = data.budgets.filter(b => b.spent > b.budget).map(b => b.cat)
     const habitStatus = data.habits.map(h =>
-      `${h.name} (${h.streak}d streak, ${h.days?.[todayDow] ? 'done' : 'NOT done'} today)`
+      `${h.name} (${h.streak}d streak, ${h.doneToday ? 'done' : 'NOT done'} today)`
     ).join(', ')
 
     const system = `You are a strategic personal consultant reviewing someone's life dashboard each morning.
@@ -50,7 +49,6 @@ Latest sleep/energy log: ${data.wellnessLogs[0] ? `${data.wellnessLogs[0].sleep_
     }
   }
 
-  const todayDow = new Date().getDay()
   const todayEvents = data.events[TODAY] || []
 
   return (
@@ -129,11 +127,11 @@ Latest sleep/energy log: ${data.wellnessLogs[0] ? `${data.wellnessLogs[0].sleep_
             <div key={h.id} className={styles.habitRow}>
               <span className={styles.habitName}>{h.name}</span>
               <button
-                className={`${styles.habitDot} ${h.days?.[todayDow] ? styles.done : ''}`}
-                onClick={() => onHabitToggle(h.id, todayDow)}
+                className={`${styles.habitDot} ${h.doneToday ? styles.done : ''}`}
+                onClick={() => onHabitToggle(h.id)}
                 aria-label={`Toggle ${h.name}`}
               >
-                {h.days?.[todayDow] ? '✓' : ''}
+                {h.doneToday ? '✓' : ''}
               </button>
               <span className={styles.streak}>🔥 {h.streak}d</span>
             </div>

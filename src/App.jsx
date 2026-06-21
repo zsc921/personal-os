@@ -130,7 +130,7 @@ export default function App() {
                 <Home
                   data={data}
                   onTabChange={setTab}
-                  onHabitToggle={(id, di) => data.toggleHabitDay(id, di)}
+                  onHabitToggle={(id) => data.toggleHabitDate(id)}
                 />
               )}
               {tab === 'nutrition' && (
@@ -147,7 +147,8 @@ export default function App() {
               {tab === 'habits' && (
                 <Habits
                   habits={data.habits}
-                  onToggleDay={data.toggleHabitDay}
+                  habitLogs={data.habitLogs}
+                  onToggleDate={data.toggleHabitDate}
                   onAddHabit={data.addHabit}
                   onEditHabit={data.editHabit}
                   onDeleteHabit={data.deleteHabit}
