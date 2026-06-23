@@ -1,0 +1,49 @@
+/* src/components/MoodScatter.module.css */
+.wrapper { display: flex; flex-direction: column; gap: 10px; }
+
+.grid {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 260px;
+  margin: 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface2);
+  overflow: hidden;
+}
+
+.quadrant { position: absolute; width: 50%; height: 50%; opacity: 0.12; }
+.qTL { top: 0; left: 0; background: #F472B6; }
+.qTR { top: 0; right: 0; background: #FBBF24; }
+.qBL { bottom: 0; left: 0; background: #60A5FA; }
+.qBR { bottom: 0; right: 0; background: #34D399; }
+
+.axisH, .axisV { position: absolute; background: var(--border); }
+.axisH { left: 0; right: 0; top: 50%; height: 1px; }
+.axisV { top: 0; bottom: 0; left: 50%; width: 1px; }
+
+.axisLabel {
+  position: absolute;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+.lblTop { top: 6px; left: 50%; transform: translateX(-50%); }
+.lblBot { bottom: 6px; left: 50%; transform: translateX(-50%); }
+.lblLeft { left: 6px; top: 50%; transform: translateY(-50%) rotate(-90deg); transform-origin: left center; }
+.lblRight { right: 6px; top: 50%; transform: translateY(-50%) rotate(90deg); transform-origin: right center; }
+
+.dot {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  cursor: default;
+  transition: transform .15s;
+}
+.dot:hover { transform: translate(-50%, -50%) scale(1.5); z-index: 2; }
+
+.hint { font-size: 11px; color: var(--muted); text-align: center; opacity: 0.7; }
+.empty { font-size: 13px; color: var(--muted); padding: 20px 12px; text-align: center; }

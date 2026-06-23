@@ -1,90 +1,67 @@
 /* src/components/MoodGrid.module.css */
-.wrapper { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.wrapper { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.label { font-size: 12px; color: var(--muted); }
+.selectedLabel { color: var(--accent); font-weight: 500; margin-left: 4px; }
 
 .grid {
   position: relative;
-  width: 100%;
-  max-width: 280px;
-  aspect-ratio: 1;
-  background:
-    linear-gradient(135deg, rgba(167,139,250,0.10), transparent 50%),
-    linear-gradient(225deg, rgba(248,113,113,0.08), transparent 50%),
-    linear-gradient(315deg, rgba(96,165,250,0.08), transparent 50%),
-    linear-gradient(45deg, rgba(52,211,153,0.10), transparent 50%);
-  background-color: var(--surface2);
+  max-width: 100%;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
+  background: var(--surface2);
   cursor: crosshair;
-  margin: 0 auto;
+  overflow: hidden;
 }
 
-.grid.readOnly { cursor: default; }
+.quadrant { position: absolute; width: 50%; height: 50%; opacity: 0.15; }
+.qTL { top: 0; left: 0; background: #F472B6; }
+.qTR { top: 0; right: 0; background: #FBBF24; }
+.qBL { bottom: 0; left: 0; background: #60A5FA; }
+.qBR { bottom: 0; right: 0; background: #34D399; }
 
-.crosshairV {
-  position: absolute;
-  left: 50%; top: 0; bottom: 0;
-  width: 1px;
-  background: var(--border);
-}
-.crosshairH {
-  position: absolute;
-  top: 50%; left: 0; right: 0;
-  height: 1px;
-  background: var(--border);
-}
+.axisH, .axisV { position: absolute; background: var(--border); }
+.axisH { left: 0; right: 0; top: 50%; height: 1px; }
+.axisV { top: 0; bottom: 0; left: 50%; width: 1px; }
 
-.dot {
+.axisLabel {
   position: absolute;
-  width: 14px; height: 14px;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  pointer-events: none;
+}
+.lblTop { top: 4px; left: 50%; transform: translateX(-50%); }
+.lblBot { bottom: 4px; left: 50%; transform: translateX(-50%); }
+.lblLeft { left: 4px; top: 50%; transform: translateY(-50%) rotate(-90deg); transform-origin: left center; }
+.lblRight { right: 4px; top: 50%; transform: translateY(-50%) rotate(90deg); transform-origin: right center; }
+
+.emotion {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: none;
+  border: none;
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background .15s, transform .15s, font-weight .15s;
+  opacity: 0.85;
+}
+.emotion:hover { opacity: 1; background: var(--surface); transform: translate(-50%, -50%) scale(1.1); }
+.emotionActive { font-weight: 600; opacity: 1; background: var(--surface); }
+
+.pin {
+  position: absolute;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: var(--accent);
   border: 2px solid var(--bg);
-  box-shadow: 0 0 0 1px var(--accent), 0 0 10px var(--accent-glow);
   transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 2px var(--accent);
   pointer-events: none;
-  transition: left 0.1s ease, top 0.1s ease;
-}
-
-.axisLabelTop, .axisLabelBottom {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 9px;
-  color: var(--muted);
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-  pointer-events: none;
-}
-.axisLabelTop { top: -16px; }
-.axisLabelBottom { bottom: -16px; }
-
-.axisLabelLeft, .axisLabelRight {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 9px;
-  color: var(--muted);
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-  pointer-events: none;
-}
-.axisLabelLeft { left: -52px; }
-.axisLabelRight { right: -56px; }
-
-.readout {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  font-size: 12px;
-}
-
-.moodTag {
-  color: var(--accent);
-  font-weight: 500;
-}
-
-.coords {
-  color: var(--muted);
-  font-size: 11px;
 }

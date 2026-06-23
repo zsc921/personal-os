@@ -344,10 +344,10 @@ export function useData() {
   }, [])
 
   // ── Journal ───────────────────────────────────────────────────────────────
-  const addJournalEntry = useCallback(async ({ text, summary = '', actions = [], insight = '', valence = null, arousal = null }) => {
+  const addJournalEntry = useCallback(async ({ text, summary = '', actions = [], insight = '', valence = null, arousal = null, mood_label = null }) => {
     const { data, error } = await supabase
       .from('journal_entries')
-      .insert({ text, summary, actions, insight, valence, arousal })
+      .insert({ text, summary, actions, insight, valence, arousal, mood_label })
       .select()
       .single()
     if (error) throw error
@@ -386,6 +386,12 @@ export function useData() {
     const { error } = await supabase.from('wellness_logs').delete().eq('id', id)
     if (error) throw error
     setWellnessLogs(prev => prev.filter(w => w.id !== id))
+  }, [])
+
+  const editWellnessLog = useCallback(async (id, updates) => {
+    const { error } = await supabase.from('wellness_logs').update(updates).eq('id', id)
+    if (error) throw error
+    setWellnessLogs(prev => prev.map(w => w.id === id ? { ...w, ...updates } : w))
   }, [])
 
   // ── Budget categories ─────────────────────────────────────────────────────
@@ -499,7 +505,7 @@ export function useData() {
     editBudget, addBudget, deleteBudget, resetMonthlySpend,
     addEvent, editEvent, deleteEvent,
     addJournalEntry, updateJournalEntry, deleteJournalEntry,
-    addWellnessLog, deleteWellnessLog,
+    addWellnessLog, deleteWellnessLog, editWellnessLog,
     updateSetting,
     addBodyLog, deleteBodyLog, addMeal, deleteMeal,
     reload: loadAll,

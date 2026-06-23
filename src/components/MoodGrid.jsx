@@ -1,78 +1,126 @@
 // src/components/MoodGrid.jsx
-// 2D mood picker: valence (negative ↔ positive) on X, arousal (calm ↔ activated) on Y.
-// Inspired by the circumplex model of affect referenced in "A Brief History of Intelligence."
+// Four-quadrant mood picker based on the arousal/valence model.
+// User clicks a position on the grid; we map to (valence, arousal) in [-1, 1]
+// and surface the nearest descriptive emotion label from the surrounding quadrant.
 
-import { useRef } from 'react'
+import { useState } from 'react'
 import styles from './MoodGrid.module.css'
 
-const QUADRANT_LABELS = {
-  q1: 'Excited / Energized',   // +valence, +arousal
-  q2: 'Tense / Anxious',       // -valence, +arousal
-  q3: 'Sad / Depleted',        // -valence, -arousal
-  q4: 'Calm / Content',        // +valence, -arousal
+// Curated emotions placed at approximate (valence, arousal) coordinates from -1 to 1
+const EMOTIONS = [
+  // High-arousal pleasant (top right)
+  { label: 'Excited',     v:  0.5, a:  0.9, color: '#FBBF24' },
+  { label: 'Happy',       v:  0.8, a:  0.6, color: '#FBBF24' },
+  { label: 'Delighted',   v:  0.6, a:  0.7, color: '#FBBF24' },
+  { label: 'Amused',      v:  0.3, a:  0.5, color: '#FBBF24' },
+  { label: 'Glad',        v:  0.7, a:  0.4, color: '#FBBF24' },
+  { label: 'Curious',     v:  0.3, a:  0.3, color: '#FBBF24' },
+  // High-arousal unpleasant (top left)
+  { label: 'Infuriated',  v: -0.8, a:  0.9, color: '#F472B6' },
+  { label: 'Fear',        v: -0.5, a:  0.8, color: '#F472B6' },
+  { label: 'Angry',       v: -0.7, a:  0.6, color: '#F472B6' },
+  { label: 'Alarmed',     v: -0.3, a:  0.6, color: '#F472B6' },
+  { label: 'Frustrated',  v: -0.6, a:  0.4, color: '#F472B6' },
+  { label: 'Annoyed',     v: -0.4, a:  0.3, color: '#F472B6' },
+  // Low-arousal unpleasant (bottom left)
+  { label: 'Miserable',   v: -0.7, a: -0.3, color: '#60A5FA' },
+  { label: 'Bored',       v: -0.4, a: -0.4, color: '#60A5FA' },
+  { label: 'Depressed',   v: -0.8, a: -0.5, color: '#60A5FA' },
+  { label: 'Gloomy',      v: -0.5, a: -0.6, color: '#60A5FA' },
+  { label: 'Sad',         v: -0.7, a: -0.7, color: '#60A5FA' },
+  { label: 'Tired',       v: -0.3, a: -0.8, color: '#60A5FA' },
+  // Low-arousal pleasant (bottom right)
+  { label: 'Content',     v:  0.6, a: -0.3, color: '#34D399' },
+  { label: 'Satisfied',   v:  0.3, a: -0.4, color: '#34D399' },
+  { label: 'Relaxed',     v:  0.6, a: -0.6, color: '#34D399' },
+  { label: 'Calm',        v:  0.4, a: -0.8, color: '#34D399' },
+]
+
+function nearestEmotion(v, a) {
+  let best = EMOTIONS[0], bestDist = Infinity
+  EMOTIONS.forEach(e => {
+    const d = (e.v - v) ** 2 + (e.a - a) ** 2
+    if (d < bestDist) { bestDist = d; best = e }
+  })
+  return best
 }
 
-function getQuadrant(v, a) {
-  if (v >= 0 && a >= 0) return 'q1'
-  if (v < 0 && a >= 0) return 'q2'
-  if (v < 0 && a < 0) return 'q3'
-  return 'q4'
-}
-
-export function moodLabel(v, a) {
-  return QUADRANT_LABELS[getQuadrant(v, a)]
-}
-
-export default function MoodGrid({ valence = 0, arousal = 0, onChange, readOnly = false }) {
-  const gridRef = useRef(null)
-
-  function handleInteract(clientX, clientY) {
-    if (readOnly || !onChange) return
-    const rect = gridRef.current.getBoundingClientRect()
-    const x = Math.min(Math.max(clientX - rect.left, 0), rect.width)
-    const y = Math.min(Math.max(clientY - rect.top, 0), rect.height)
-    const v = Math.round(((x / rect.width) * 2 - 1) * 10) / 10
-    const a = Math.round((1 - (y / rect.height) * 2) * 10) / 10
-    onChange(v, a)
-  }
+export default function MoodGrid({ value, onChange }) {
+  const [hover, setHover] = useState(null)
+  const gridSize = 280
+  const padding = 20
 
   function handleClick(e) {
-    handleInteract(e.clientX, e.clientY)
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const v = ((x / rect.width) * 2 - 1).toFixed(2) * 1
+    const a = (1 - (y / rect.height) * 2).toFixed(2) * 1
+    const emotion = nearestEmotion(v, a)
+    onChange({ valence: v, arousal: a, label: emotion.label })
   }
 
-  function handleDrag(e) {
-    if (e.buttons !== 1) return
-    handleInteract(e.clientX, e.clientY)
+  function handleEmotionClick(e, emotion) {
+    e.stopPropagation()
+    onChange({ valence: emotion.v, arousal: emotion.a, label: emotion.label })
   }
 
-  const dotX = ((valence + 1) / 2) * 100
-  const dotY = ((1 - arousal) / 2) * 100
+  // Convert (v,a) [-1,1] to pixel position
+  function pos(v, a) {
+    return {
+      left: `${((v + 1) / 2) * 100}%`,
+      top:  `${((1 - a) / 2) * 100}%`,
+    }
+  }
 
   return (
     <div className={styles.wrapper}>
-      <div
-        ref={gridRef}
-        className={`${styles.grid} ${readOnly ? styles.readOnly : ''}`}
-        onClick={handleClick}
-        onMouseMove={handleDrag}
-        role={readOnly ? undefined : 'slider'}
-        aria-label="Mood: valence and arousal"
-      >
-        <div className={styles.axisLabelTop}>High energy</div>
-        <div className={styles.axisLabelBottom}>Low energy</div>
-        <div className={styles.axisLabelLeft}>Unpleasant</div>
-        <div className={styles.axisLabelRight}>Pleasant</div>
-        <div className={styles.crosshairV} />
-        <div className={styles.crosshairH} />
-        <div
-          className={styles.dot}
-          style={{ left: `${dotX}%`, top: `${dotY}%` }}
-        />
+      <div className={styles.label}>
+        How do you feel?
+        {value && <span className={styles.selectedLabel}>· {value.label}</span>}
       </div>
-      <div className={styles.readout}>
-        <span className={styles.moodTag}>{moodLabel(valence, arousal)}</span>
-        <span className={styles.coords}>v {valence.toFixed(1)} · a {arousal.toFixed(1)}</span>
+      <div
+        className={styles.grid}
+        style={{ width: gridSize, height: gridSize }}
+        onClick={handleClick}
+      >
+        {/* Quadrant backgrounds */}
+        <div className={`${styles.quadrant} ${styles.qTL}`} />
+        <div className={`${styles.quadrant} ${styles.qTR}`} />
+        <div className={`${styles.quadrant} ${styles.qBL}`} />
+        <div className={`${styles.quadrant} ${styles.qBR}`} />
+
+        {/* Axis lines */}
+        <div className={styles.axisH} />
+        <div className={styles.axisV} />
+
+        {/* Quadrant labels */}
+        <div className={`${styles.axisLabel} ${styles.lblTop}`}>High arousal</div>
+        <div className={`${styles.axisLabel} ${styles.lblBot}`}>Low arousal</div>
+        <div className={`${styles.axisLabel} ${styles.lblLeft}`}>Unpleasant</div>
+        <div className={`${styles.axisLabel} ${styles.lblRight}`}>Pleasant</div>
+
+        {/* Emotion dots */}
+        {EMOTIONS.map(e => (
+          <button
+            key={e.label}
+            className={`${styles.emotion} ${value?.label === e.label ? styles.emotionActive : ''}`}
+            style={{ ...pos(e.v, e.a), color: e.color }}
+            onClick={(ev) => handleEmotionClick(ev, e)}
+            onMouseEnter={() => setHover(e.label)}
+            onMouseLeave={() => setHover(null)}
+          >
+            {e.label}
+          </button>
+        ))}
+
+        {/* Selected pin */}
+        {value && (
+          <div className={styles.pin} style={pos(value.valence, value.arousal)} />
+        )}
       </div>
     </div>
   )
 }
+
+export { EMOTIONS, nearestEmotion }
