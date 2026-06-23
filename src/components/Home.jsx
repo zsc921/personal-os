@@ -37,7 +37,7 @@ Budget breakdown: ${data.budgets.map(b => `${b.cat} $${b.spent}/$${b.budget}`).j
 Today's events: ${(data.events[TODAY] || []).map(e => `${e.time} ${e.name}`).join(', ') || 'none'}
 Journal entries this month: ${data.journalEntries.length}
 Last journal insight: "${data.journalEntries[0]?.insight || 'none'}"
-Latest sleep/energy log: ${data.wellnessLogs[0] ? `${data.wellnessLogs[0].sleep_hours ? data.wellnessLogs[0].sleep_hours + 'h sleep' : ''} ${data.wellnessLogs[0].sleep_score ? 'score ' + data.wellnessLogs[0].sleep_score : ''} ${data.wellnessLogs[0].energy_level ? 'energy ' + data.wellnessLogs[0].energy_level + '/10' : ''}`.trim() : 'none logged'}`
+Latest sleep/energy log: ${data.wellnessLogs[0] ? `${data.wellnessLogs[0].sleep_hours ? data.wellnessLogs[0].sleep_hours + 'h sleep' : ''} ${data.wellnessLogs[0].sleep_score ? 'score ' + data.wellnessLogs[0].sleep_score : ''} ${data.wellnessLogs[0].energy_level ? 'energy ' + data.wellnessLogs[0].energy_level + '/100' : ''}`.trim() : 'none logged'}`
 
     try {
       const raw = await callClaude({ system, messages: [{ role: 'user', content: userMsg }] })

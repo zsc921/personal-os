@@ -1,15 +1,18 @@
 // src/components/SleepEnergyChart.jsx
-// Dual-line chart: date on X axis, sleep hours (left axis) and energy 0-100 (right axis).
+// Dual-line chart: date on X axis, sleep hours (left axis 4-10) and energy 0-100 (right axis 50-100).
 // Pure SVG, no chart library needed.
 
 import styles from './SleepEnergyChart.module.css'
+
+const SLEEP_MIN = 4, SLEEP_MAX = 10
+const ENERGY_MIN = 50, ENERGY_MAX = 100
 
 export default function SleepEnergyChart({ logs }) {
   // logs come newest-first; reverse to chronological for the timeline
   const data = [...logs].reverse().filter(l => l.sleep_hours != null || l.energy_level != null)
 
   if (data.length === 0) {
-    return <p className={styles.empty}>No logs yet. Try the command bar: "Slept 7.5 hours, energy 7/10"</p>
+    return <p className={styles.empty}>No logs yet. Try the command bar: "Slept 7.5 hours, energy 80"</p>
   }
 
   const W = 640, H = 200
@@ -20,11 +23,15 @@ export default function SleepEnergyChart({ logs }) {
   const n = data.length
   const xFor = i => padL + (n === 1 ? plotW / 2 : (i / (n - 1)) * plotW)
 
-  // Sleep axis: 0–12 hours. Energy axis: 0–10 (stored as 1-10 energy_level).
-  const SLEEP_MAX = 12
-  const ENERGY_MAX = 10
-  const ySleep = h => padT + plotH - (Math.min(h, SLEEP_MAX) / SLEEP_MAX) * plotH
-  const yEnergy = e => padT + plotH - (Math.min(e, ENERGY_MAX) / ENERGY_MAX) * plotH
+  // Map a value to plot Y, clamping to the axis range
+  const ySleep = h => {
+    const clamped = Math.max(SLEEP_MIN, Math.min(h, SLEEP_MAX))
+    return padT + plotH - ((clamped - SLEEP_MIN) / (SLEEP_MAX - SLEEP_MIN)) * plotH
+  }
+  const yEnergy = e => {
+    const clamped = Math.max(ENERGY_MIN, Math.min(e, ENERGY_MAX))
+    return padT + plotH - ((clamped - ENERGY_MIN) / (ENERGY_MAX - ENERGY_MIN)) * plotH
+  }
 
   const sleepPts = data.map((d, i) => d.sleep_hours != null ? [xFor(i), ySleep(d.sleep_hours)] : null).filter(Boolean)
   const energyPts = data.map((d, i) => d.energy_level != null ? [xFor(i), yEnergy(d.energy_level)] : null).filter(Boolean)
@@ -39,11 +46,15 @@ export default function SleepEnergyChart({ logs }) {
   // Show at most ~7 x labels to avoid crowding
   const labelStep = Math.ceil(n / 7)
 
+  // Axis tick values
+  const sleepTicks = [4, 6, 8, 10]
+  const energyTicks = [50, 75, 100]
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.legend}>
         <span className={styles.legendItem}><span className={styles.dotSleep} /> Sleep (h)</span>
-        <span className={styles.legendItem}><span className={styles.dotEnergy} /> Energy (/10)</span>
+        <span className={styles.legendItem}><span className={styles.dotEnergy} /> Energy (/100)</span>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} className={styles.svg} preserveAspectRatio="xMidYMid meet">
         {/* horizontal gridlines */}
@@ -55,11 +66,11 @@ export default function SleepEnergyChart({ logs }) {
         ))}
 
         {/* left axis labels (sleep hrs) */}
-        {[0, 3, 6, 9, 12].map((h, i) => (
+        {sleepTicks.map((h, i) => (
           <text key={i} x={padL - 6} y={ySleep(h) + 3} textAnchor="end" className={styles.axisLabel}>{h}</text>
         ))}
         {/* right axis labels (energy) */}
-        {[0, 5, 10].map((e, i) => (
+        {energyTicks.map((e, i) => (
           <text key={i} x={W - padR + 6} y={yEnergy(e) + 3} textAnchor="start" className={styles.axisLabelEnergy}>{e}</text>
         ))}
 

@@ -35,7 +35,7 @@ export function useData() {
       const [h, hl, t, b, e, j, w, s, bl, m, sh] = await Promise.all([
         supabase.from('habits').select('*').order('created_at'),
         supabase.from('habit_logs').select('*').order('date', { ascending: false }).limit(400),
-        supabase.from('transactions').select('*').order('created_at', { ascending: false }).limit(20),
+        supabase.from('transactions').select('*').order('created_at', { ascending: false }).limit(200),
         supabase.from('budgets').select('*').order('cat'),
         supabase.from('calendar_events').select('*').order('date').order('time'),
         supabase.from('journal_entries').select('*').order('created_at', { ascending: false }).limit(20),
@@ -176,7 +176,7 @@ export function useData() {
       created_at: new Date().toISOString(),
     }])
     setWellnessLogs([
-      { id: 1, sleep_hours: 7.5, sleep_score: 84, energy_level: 7, created_at: new Date().toISOString() },
+      { id: 1, sleep_hours: 7.5, sleep_score: 84, energy_level: 75, created_at: new Date().toISOString() },
     ])
     setBodyLogs([])
     setMeals([])
@@ -471,7 +471,7 @@ export function useData() {
   }, [])
 
   // ── Derived stats ─────────────────────────────────────────────────────────
-  const totalSpent = transactions.reduce((s, t) => s + (t.amount || 0), 0)
+  const totalSpent = budgets.reduce((s, b) => s + (b.spent || 0), 0)
   const totalBudget = budgets.reduce((s, b) => s + (b.budget || 0), 0)
 
   const todayKey = dateStr(new Date())

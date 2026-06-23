@@ -24,6 +24,7 @@ export default function Finance({
   const [budgetEdits, setBudgetEdits] = useState({})
   const [newCat, setNewCat] = useState('')
   const [newAmt, setNewAmt] = useState('')
+  const [txView, setTxView] = useState('recent') // 'recent' | 'top10'
 
   const rate = settings?.usd_cny_rate || 7.1
   const toCny = usd => (usd * rate).toLocaleString('en-US', { maximumFractionDigits: 0 })
@@ -220,56 +221,83 @@ export default function Finance({
         </div>
 
         <div className={styles.card}>
-          <div className={styles.cardHeader}><span className={styles.cardTitle}>Recent transactions</span></div>
-          {transactions.length === 0 && <p className={styles.empty}>No transactions yet.</p>}
-          {transactions.slice(0, 8).map((t, i) => (
-            <div key={t.id || i} className={styles.txRow}>
-              {editingId === t.id ? (
-                <div className={styles.editRow}>
-                  <input
-                    className={styles.editInput}
-                    value={editFields.name}
-                    onChange={e => setEditFields(f => ({ ...f, name: e.target.value }))}
-                    placeholder="Description"
-                  />
-                  <input
-                    className={styles.editInput}
-                    type="number"
-                    value={editFields.amount}
-                    onChange={e => setEditFields(f => ({ ...f, amount: e.target.value }))}
-                    style={{ width: 70 }}
-                  />
-                  <select
-                    className={styles.editSelect}
-                    value={editFields.cat}
-                    onChange={e => setEditFields(f => ({ ...f, cat: e.target.value }))}
-                  >
-                    {CATS.map(c => <option key={c}>{c}</option>)}
-                  </select>
-                  <button className={styles.accentBtn} onClick={() => saveEdit(t.id)}>Save</button>
-                  <button className={styles.ghostBtn} onClick={cancelEdit}>✕</button>
+          <div className={styles.cardHeader}>
+            <div className={styles.viewToggle}>
+              <button className={`${styles.toggleBtn} ${txView === 'recent' ? styles.toggleActive : ''}`} onClick={() => setTxView('recent')}>Recent</button>
+              <button className={`${styles.toggleBtn} ${txView === 'top10' ? styles.toggleActive : ''}`} onClick={() => setTxView('top10')}>Top 10 YTD</button>
+            </div>
+          </div>
+
+          {txView === 'recent' ? (
+            <>
+              {transactions.length === 0 && <p className={styles.empty}>No transactions yet.</p>}
+              {transactions.slice(0, 8).map((t, i) => (
+                <div key={t.id || i} className={styles.txRow}>
+                  {editingId === t.id ? (
+                    <div className={styles.editRow}>
+                      <input className={styles.editInput} value={editFields.name} onChange={e => setEditFields(f => ({ ...f, name: e.target.value }))} placeholder="Description" />
+                      <input className={styles.editInput} type="number" value={editFields.amount} onChange={e => setEditFields(f => ({ ...f, amount: e.target.value }))} style={{ width: 70 }} />
+                      <select className={styles.editSelect} value={editFields.cat} onChange={e => setEditFields(f => ({ ...f, cat: e.target.value }))}>
+                        {CATS.map(c => <option key={c}>{c}</option>)}
+                      </select>
+                      <button className={styles.accentBtn} onClick={() => saveEdit(t.id)}>Save</button>
+                      <button className={styles.ghostBtn} onClick={cancelEdit}>✕</button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className={styles.txIcon}>{t.icon || '💳'}</div>
+                      <div className={styles.txInfo}>
+                        <div className={styles.txName}>{t.name}</div>
+                        <div className={styles.txMeta}>
+                          {t.created_at ? new Date(t.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''} · {t.cat}
+                        </div>
+                      </div>
+                      <div className={styles.txAmount}>
+                        -${t.amount}
+                        <span className={styles.txCny}>¥{toCny(t.amount)}</span>
+                      </div>
+                      <div className={styles.rowActions}>
+                        <button className={styles.editBtn} onClick={() => startEdit(t)} title="Edit">✎</button>
+                        <button className={styles.deleteBtn} onClick={() => onDeleteTransaction(t.id)} title="Delete">×</button>
+                      </div>
+                    </>
+                  )}
                 </div>
-              ) : (
-                <>
-                  <div className={styles.txIcon}>{t.icon || '💳'}</div>
-                  <div className={styles.txInfo}>
-                    <div className={styles.txName}>{t.name}</div>
-                    <div className={styles.txMeta}>
-                      {t.created_at ? new Date(t.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''} · {t.cat}
+              ))}
+            </>
+          ) : (
+            <>
+              {(() => {
+                const currentYear = new Date().getFullYear()
+                const ytdTx = [...transactions]
+                  .filter(t => new Date(t.created_at).getFullYear() === currentYear)
+                  .sort((a, b) => b.amount - a.amount)
+                  .slice(0, 10)
+                const ytdMax = ytdTx[0]?.amount || 1
+                return ytdTx.length === 0 ? (
+                  <p className={styles.empty}>No transactions this year yet.</p>
+                ) : ytdTx.map((t, i) => (
+                  <div key={t.id || i} className={styles.top10Row}>
+                    <div className={styles.top10Rank}>{i + 1}</div>
+                    <div className={styles.txIcon}>{t.icon || '💳'}</div>
+                    <div className={styles.txInfo}>
+                      <div className={styles.txName}>{t.name}</div>
+                      <div className={styles.txMeta}>
+                        {t.created_at ? new Date(t.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''} · {t.cat}
+                      </div>
+                      <div className={styles.top10Bar}>
+                        <div className={styles.top10BarFill} style={{ width: `${(t.amount / ytdMax) * 100}%`, background: ICONS[t.cat] ? 'var(--accent)' : 'var(--muted)' }} />
+                      </div>
+                    </div>
+                    <div className={styles.txAmount}>
+                      -${t.amount.toLocaleString()}
+                      <span className={styles.txCny}>¥{toCny(t.amount)}</span>
                     </div>
                   </div>
-                  <div className={styles.txAmount}>
-                    -${t.amount}
-                    <span className={styles.txCny}>¥{toCny(t.amount)}</span>
-                  </div>
-                  <div className={styles.rowActions}>
-                    <button className={styles.editBtn} onClick={() => startEdit(t)} title="Edit">✎</button>
-                    <button className={styles.deleteBtn} onClick={() => onDeleteTransaction(t.id)} title="Delete">×</button>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
+                ))
+              })()}
+            </>
+          )}
         </div>
       </div>
     </div>
