@@ -184,6 +184,13 @@ export default function App() {
                   onAddEntry={data.addJournalEntry}
                   onUpdateEntry={data.updateJournalEntry}
                   onDeleteEntry={data.deleteJournalEntry}
+                  dataSnapshot={{
+                    habits: data.habits.map(h => ({ name: h.name, streak: h.streak, doneToday: h.doneToday })),
+                    latestWellness: data.wellnessLogs[0] || null,
+                    recentMoods: data.journalEntries.slice(0, 5).map(e => e.mood_label).filter(Boolean),
+                    monthSpend: data.totalSpent,
+                    monthBudget: data.totalBudget,
+                  }}
                 />
               )}
             </>

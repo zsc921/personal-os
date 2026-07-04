@@ -70,15 +70,19 @@
 
 .navItem.active {
   color: var(--accent);
-  border-left-color: var(--accent);
+  border-left-color: var(--module-color, var(--accent));
   background: var(--accent-dim);
   font-weight: 500;
 }
 
-.navIcon {
-  font-size: 15px;
-  flex-shrink: 0;
+.colorTick {
+  width: 3px;
+  height: 16px;
+  border-radius: 2px;
+  display: inline-block;
+  transition: opacity .2s, height .2s;
 }
+.navItem.active .colorTick { height: 20px; }
 
 .date {
   padding: 14px 20px;
@@ -141,10 +145,15 @@
 
   .navItem.active {
     border-left-color: transparent;
-    border-top-color: var(--accent);
+    border-top-color: var(--module-color, var(--accent));
   }
 
-  .navIcon {
-    font-size: 18px;
+  .colorTick {
+    width: 16px;
+    height: 3px;
+    border-radius: 2px;
+    display: inline-block;
+    transition: opacity .2s, width .2s;
   }
+  .navItem.active .colorTick { width: 22px; height: 3px; }
 }

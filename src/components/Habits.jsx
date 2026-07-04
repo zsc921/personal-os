@@ -1,6 +1,6 @@
 // src/components/Habits.jsx
 import { useState } from 'react'
-import HabitHeatmap from './HabitHeatmap'
+import HabitRings from './HabitRings'
 import styles from './Habits.module.css'
 
 const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
@@ -125,7 +125,7 @@ export default function Habits({ habits, habitLogs, onToggleDate, onAddHabit, on
             </div>
           ))
         ) : (
-          <HabitHeatmap habits={habits} habitLogs={habitLogs} onToggleDate={onToggleDate} />
+          <HabitRings habits={habits} habitLogs={habitLogs} onToggleDate={onToggleDate} />
         )}
 
         {showForm ? (

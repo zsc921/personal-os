@@ -1,36 +1,49 @@
 // src/components/YTDChart.jsx
-// YTD spending viz with toggle between "by category" (horizontal bars) and "by month" (vertical bars).
-// Reads from spending_history (archived months) + current month's live budget.spent.
+// YTD spending: toggle between "By category" (horizontal bars) and
+// "MoM trend" (stacked bars by category with per-month totals).
 
 import { useState } from 'react'
 import styles from './YTDChart.module.css'
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+const CAT_COLORS = {
+  Food: '#A78BFA', Grocery: '#34D399', Transport: '#60A5FA', Shopping: '#F472B6',
+  Health: '#4ADE80', Home: '#C4B5FD', Travel: '#38BDF8', Beauty: '#FB7185',
+  Sports: '#2DD4BF', Utility: '#FBBF24', Other: '#8B8B95', Ent: '#FB923C',
+}
 
 export default function YTDChart({ history, budgets, toCny }) {
   const [view, setView] = useState('category')
+  const [hoverCat, setHoverCat] = useState(null)
   const year = new Date().getFullYear()
   const currentMonth = new Date().getMonth() + 1
 
-  // Combine archived history rows for this year + current month from live budgets
   const liveCurrent = budgets.map(b => ({
-    year, month: currentMonth, cat: b.cat, spent: b.spent || 0, budget: b.budget || 0,
+    year, month: currentMonth, cat: b.cat, spent: b.spent || 0,
   }))
   const archived = history.filter(h => h.year === year && h.month < currentMonth)
   const allRows = [...archived, ...liveCurrent]
 
-  // ── By category aggregation ───────────────────────────────────────────────
+  // By category totals
   const byCat = {}
   allRows.forEach(r => { byCat[r.cat] = (byCat[r.cat] || 0) + (parseFloat(r.spent) || 0) })
-  const catEntries = Object.entries(byCat).sort((a, b) => b[1] - a[1])
+  const catEntries = Object.entries(byCat).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1])
   const catMax = Math.max(...catEntries.map(e => e[1]), 1)
   const ytdTotal = catEntries.reduce((s, [, v]) => s + v, 0)
 
-  // ── By month aggregation ──────────────────────────────────────────────────
+  // By month x category matrix
   const byMonth = {}
-  for (let m = 1; m <= currentMonth; m++) byMonth[m] = 0
-  allRows.forEach(r => { byMonth[r.month] = (byMonth[r.month] || 0) + (parseFloat(r.spent) || 0) })
-  const monthMax = Math.max(...Object.values(byMonth), 1)
+  for (let m = 1; m <= currentMonth; m++) byMonth[m] = {}
+  allRows.forEach(r => {
+    if (!byMonth[r.month]) byMonth[r.month] = {}
+    byMonth[r.month][r.cat] = (byMonth[r.month][r.cat] || 0) + (parseFloat(r.spent) || 0)
+  })
+  const monthTotals = Object.fromEntries(
+    Object.entries(byMonth).map(([m, cats]) => [m, Object.values(cats).reduce((s, v) => s + v, 0)])
+  )
+  const monthMax = Math.max(...Object.values(monthTotals), 1)
+
+  const colorFor = cat => CAT_COLORS[cat] || '#8B8B95'
 
   return (
     <div className={styles.card}>
@@ -44,7 +57,7 @@ export default function YTDChart({ history, budgets, toCny }) {
         </div>
         <div className={styles.toggleGroup}>
           <button className={`${styles.toggleBtn} ${view === 'category' ? styles.toggleActive : ''}`} onClick={() => setView('category')}>By category</button>
-          <button className={`${styles.toggleBtn} ${view === 'month' ? styles.toggleActive : ''}`} onClick={() => setView('month')}>By month</button>
+          <button className={`${styles.toggleBtn} ${view === 'month' ? styles.toggleActive : ''}`} onClick={() => setView('month')}>MoM trend</button>
         </div>
       </div>
 
@@ -55,28 +68,59 @@ export default function YTDChart({ history, budgets, toCny }) {
             <div key={cat} className={styles.catRow}>
               <span className={styles.catName}>{cat}</span>
               <div className={styles.catBarWrap}>
-                <div className={styles.catBar} style={{ width: `${(amt / catMax) * 100}%` }} />
+                <div className={styles.catBar} style={{ width: `${(amt / catMax) * 100}%`, background: colorFor(cat) }} />
               </div>
               <span className={styles.catAmt}>${Math.round(amt).toLocaleString()}</span>
             </div>
           ))}
         </div>
       ) : (
-        <div className={styles.monthChart}>
-          {Object.entries(byMonth).map(([m, amt]) => {
-            const h = (amt / monthMax) * 100
-            const isCurrent = parseInt(m) === currentMonth
-            return (
-              <div key={m} className={styles.monthCol}>
-                <div className={styles.monthBarWrap}>
-                  <div className={styles.monthAmtLabel}>${Math.round(amt).toLocaleString()}</div>
-                  <div className={`${styles.monthBar} ${isCurrent ? styles.monthBarCurrent : ''}`} style={{ height: `${Math.max(h, 2)}%` }} />
+        <>
+          <div className={styles.monthChart}>
+            {Object.entries(byMonth).map(([m, cats]) => {
+              const total = monthTotals[m]
+              const isCurrent = parseInt(m) === currentMonth
+              // Sort segments by size for a stable stack
+              const segments = Object.entries(cats).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1])
+              return (
+                <div key={m} className={styles.monthCol}>
+                  <div className={styles.monthBarWrap}>
+                    <div className={styles.monthAmtLabel}>${Math.round(total).toLocaleString()}</div>
+                    <div className={`${styles.stackBar} ${isCurrent ? styles.stackCurrent : ''}`}
+                      style={{ height: `${Math.max((total / monthMax) * 100, 2)}%` }}>
+                      {segments.map(([cat, v]) => (
+                        <div
+                          key={cat}
+                          className={styles.segment}
+                          style={{
+                            height: `${(v / total) * 100}%`,
+                            background: colorFor(cat),
+                            opacity: hoverCat && hoverCat !== cat ? 0.25 : 0.9,
+                          }}
+                          title={`${cat}: $${Math.round(v).toLocaleString()}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <span className={styles.monthLabel}>{MONTHS[parseInt(m) - 1]}</span>
                 </div>
-                <span className={styles.monthLabel}>{MONTHS[parseInt(m) - 1]}</span>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+          <div className={styles.stackLegend}>
+            {catEntries.slice(0, 8).map(([cat]) => (
+              <span
+                key={cat}
+                className={styles.stackLegendItem}
+                onMouseEnter={() => setHoverCat(cat)}
+                onMouseLeave={() => setHoverCat(null)}
+              >
+                <span className={styles.legendSwatch} style={{ background: colorFor(cat) }} />
+                {cat}
+              </span>
+            ))}
+          </div>
+        </>
       )}
     </div>
   )

@@ -12,3 +12,6 @@
 .dateLabel { fill: var(--muted); font-size: 9px; }
 
 .empty { font-size: 13px; color: var(--muted); padding: 12px 0; }
+
+.legendDot { width: 10px; height: 3px; border-radius: 2px; display: inline-block; }
+.endLabel { font-size: 10px; font-weight: 600; }

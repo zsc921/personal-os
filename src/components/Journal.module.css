@@ -1,6 +1,6 @@
 /* src/components/Journal.module.css */
 .wrapper { display: flex; flex-direction: column; gap: 14px; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-radius); padding: 20px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
 
 .recordArea { display: flex; flex-direction: column; align-items: center; padding: 28px 0 20px; }
 .recordBtn {
@@ -52,3 +52,35 @@
 .accentBtn { background: var(--accent); border: none; border-radius: 5px; color: #0E0E11; font-size: 11px; font-weight: 600; padding: 5px 12px; cursor: pointer; font-family: inherit; }
 .ghostBtn { background: none; border: 1px solid var(--border); border-radius: 5px; color: var(--muted); font-size: 11px; padding: 5px 10px; cursor: pointer; font-family: inherit; }
 .entryText { font-size: 13px; color: var(--text); line-height: 1.6; margin-bottom: 10px; }
+
+/* ── v5: prompt card, compose bar, day-grouped blurbs ─────────── */
+.promptCard { background: linear-gradient(135deg, rgba(167,139,250,0.10), rgba(99,102,241,0.05)); border: 1px solid var(--border); border-radius: var(--card-radius); padding: 16px 20px; backdrop-filter: blur(14px); }
+.promptLabel { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+.promptText { font-size: 15px; color: var(--text); line-height: 1.5; font-weight: 500; }
+.promptUse { background: none; border: none; color: var(--accent); font-size: 12px; cursor: pointer; padding: 8px 0 0; font-family: inherit; opacity: .85; }
+.promptUse:hover { opacity: 1; }
+
+.composeBox { width: 100%; background: var(--surface2); border: 1px solid var(--border-soft); border-radius: 12px; color: var(--text); font-size: 14px; line-height: 1.6; padding: 14px; font-family: inherit; outline: none; resize: vertical; }
+.composeBox:focus { border-color: var(--accent); }
+.composeBox::placeholder { color: var(--muted); }
+.refining { font-size: 12px; color: var(--accent); padding: 8px 2px; }
+
+.composeBar { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.composeSpacer { flex: 1; }
+.micBtn { background: var(--surface2); border: 1px solid var(--border-soft); border-radius: 10px; color: var(--muted); font-size: 12px; padding: 8px 14px; cursor: pointer; font-family: inherit; transition: all .15s; }
+.micBtn:hover { border-color: var(--accent); color: var(--text); }
+.micActive { background: rgba(248,113,113,0.12); border-color: var(--red); color: var(--red); }
+.moodToggle { background: var(--surface2); border: 1px solid var(--border-soft); border-radius: 10px; color: var(--muted); font-size: 12px; padding: 8px 14px; cursor: pointer; font-family: inherit; transition: all .15s; }
+.moodToggle:hover { border-color: var(--accent); color: var(--text); }
+.moodSection { margin-top: 14px; }
+
+.dayGroup { margin-top: 4px; }
+.dayHeader { display: flex; align-items: baseline; gap: 10px; font-size: 13px; font-weight: 500; color: var(--text); padding: 6px 4px; }
+.dayCount { font-size: 11px; color: var(--muted); font-weight: 400; }
+.blurbCard { background: var(--surface); border: 1px solid var(--border-soft); border-radius: 14px; padding: 14px 16px; margin-bottom: 8px; cursor: pointer; transition: border-color .15s; backdrop-filter: blur(14px); }
+.blurbCard:hover { border-color: var(--border); }
+.blurbTop { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.blurbTime { font-size: 11px; color: var(--muted); }
+.blurbActions { margin-left: auto; display: flex; gap: 6px; opacity: 0; transition: opacity .15s; }
+.blurbCard:hover .blurbActions { opacity: 1; }
+.blurbText { font-size: 13px; color: var(--muted); line-height: 1.55; }

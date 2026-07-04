@@ -133,8 +133,6 @@ export default function Finance({
         </div>
       )}
 
-      <YTDChart history={spendingHistory} budgets={budgets} toCny={toCny} />
-
       <div className={styles.grid2}>
         <div className={styles.card}>
           <div className={styles.cardHeader}>
@@ -300,6 +298,8 @@ export default function Finance({
           )}
         </div>
       </div>
+
+      <YTDChart history={spendingHistory} budgets={budgets} toCny={toCny} />
     </div>
   )
 }
