@@ -60,7 +60,7 @@
   font-family: inherit;
   cursor: pointer;
   text-align: left;
-  transition: color 0.15s, background 0.15s;
+  transition: color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 
 .navItem:hover {
@@ -73,6 +73,9 @@
   border-left-color: var(--module-color, var(--accent));
   background: var(--accent-dim);
   font-weight: 500;
+  /* Soft glow in the module's own color — reads even at a glance, carries onto the mobile bottom bar too */
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--module-color, var(--accent)) 35%, transparent),
+              0 0 16px -4px var(--module-color, var(--accent));
 }
 
 .colorTick {

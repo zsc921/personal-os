@@ -7,6 +7,7 @@
   --bg: #0C0C10;
   --surface: rgba(167, 139, 250, 0.05);
   --surface2: rgba(255, 255, 255, 0.04);
+  --surface-2-solid: #17171d;
   --border: rgba(167, 139, 250, 0.18);
   --border-soft: rgba(255, 255, 255, 0.07);
   --accent: #A78BFA;
@@ -21,6 +22,11 @@
   --blue: #60A5FA;
   --pink: #F472B6;
   --card-radius: 16px;
+
+  /* Elevation — edge + ambient darkness, tuned for this dark ground */
+  --shadow-sm: 0 0 0 1px var(--border-soft), 0 2px 8px rgba(0,0,0,0.35);
+  --shadow-md: 0 0 0 1px var(--border), 0 8px 24px rgba(0,0,0,0.45);
+  --shadow-lg: 0 0 0 1px var(--border), 0 20px 48px rgba(0,0,0,0.55);
 }
 
 html, body, #root {

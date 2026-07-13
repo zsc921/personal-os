@@ -104,11 +104,23 @@ Latest sleep/energy log: ${data.wellnessLogs[0] ? `${data.wellnessLogs[0].sleep_
           <div className={`${styles.statSub} ${data.totalSpent > data.totalBudget ? styles.down : styles.up}`}>
             {data.totalSpent > data.totalBudget ? `↑ $${(data.totalSpent - data.totalBudget).toLocaleString()} over` : `↓ $${(data.totalBudget - data.totalSpent).toLocaleString()} under`}
           </div>
+          <div className={styles.barTrack}>
+            <div
+              className={styles.barFill}
+              style={{ width: `${Math.min(100, (data.totalSpent / data.totalBudget) * 100)}%` }}
+            />
+          </div>
         </div>
         <div className={styles.statCard}>
           <div className={styles.statLabel}>Habits today</div>
           <div className={styles.statValue}>{data.habitsDoneToday}/{data.habits.length}</div>
           <div className={styles.statSub} style={{ color: 'var(--muted)' }}>completed</div>
+          <div className={styles.barTrack}>
+            <div
+              className={styles.barFill}
+              style={{ width: `${data.habits.length ? (data.habitsDoneToday / data.habits.length) * 100 : 0}%` }}
+            />
+          </div>
         </div>
         <div className={styles.statCard}>
           <div className={styles.statLabel}>Journal entries</div>

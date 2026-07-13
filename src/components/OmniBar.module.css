@@ -10,16 +10,20 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--surface);
-  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 10px 14px;
-  transition: border-color 0.2s;
+  transition: box-shadow 0.2s;
+  /* Gradient hairline (accent → transparent) instead of a flat border —
+     echoes .briefCard::before in Home.module.css */
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    linear-gradient(90deg, var(--accent), transparent) border-box;
+  border: 1px solid transparent;
 }
 
 .row:focus-within,
 .row.loading {
-  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .icon {

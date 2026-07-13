@@ -3,11 +3,11 @@
 
 .briefCard {
   background: var(--surface);
-  border: 1px solid rgba(167,139,250,0.3);
   border-radius: 12px;
   padding: 20px;
   position: relative;
   overflow: hidden;
+  box-shadow: var(--shadow-md);
 }
 .briefCard::before {
   content: '';
@@ -32,7 +32,7 @@
 .refreshBtn:disabled { opacity: .4; cursor: not-allowed; }
 
 .priorities { display: flex; flex-direction: column; gap: 10px; }
-.priorityItem { display: flex; gap: 12px; padding: 12px; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); }
+.priorityItem { display: flex; gap: 12px; padding: 12px; background: var(--surface2); border-radius: 8px; box-shadow: var(--shadow-sm); }
 .priorityNum { font-size: 11px; font-weight: 600; color: var(--accent); min-width: 18px; padding-top: 2px; }
 .priorityBody { flex: 1; }
 .priorityAction { font-size: 13px; color: var(--text); font-weight: 500; margin-bottom: 4px; }
@@ -49,16 +49,36 @@
 .urgency_low { color: var(--muted); }
 
 .statsRow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-.statCard { background: var(--surface2); border: 1px solid var(--border-soft); border-radius: 14px; padding: 16px; position: relative; overflow: hidden; }
-.statCard::after { content: ""; position: absolute; left: 0; right: 40%; bottom: 0; height: 2px; background: linear-gradient(90deg, var(--accent), transparent); opacity: .6; }
-.statLabel { font-size: 11px; color: var(--muted); margin-bottom: 6px; letter-spacing: .04em; }
-.statValue { font-size: 28px; font-weight: 500; letter-spacing: -0.02em; color: var(--text); }
-.statSub { font-size: 11px; margin-top: 4px; }
+.statCard {
+  background: var(--surface-2-solid);
+  border-radius: 14px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+/* Accent glow behind the number — decorative, sits under the text */
+.statCard::before {
+  content: "";
+  position: absolute;
+  top: -30px; right: -20px;
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-glow), transparent 70%);
+  pointer-events: none;
+}
+.statLabel { font-size: 11px; color: var(--muted); margin-bottom: 6px; letter-spacing: .04em; position: relative; }
+.statValue { font-size: 28px; font-weight: 500; letter-spacing: -0.02em; color: var(--text); position: relative; }
+.statSub { font-size: 11px; margin-top: 4px; position: relative; }
 .up { color: var(--green); }
 .down { color: var(--red); }
 
+/* Progress bars — used under Monthly spend and Habits today */
+.barTrack { height: 4px; background: var(--border-soft); border-radius: 2px; margin-top: 8px; overflow: hidden; position: relative; }
+.barFill { height: 100%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); border-radius: 2px; }
+
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-radius); padding: 20px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.card { background: var(--surface); border-radius: var(--card-radius); padding: 20px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--shadow-md); }
 .cardHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .cardTitle { font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .cardSub { font-size: 11px; color: var(--muted); opacity: 0.7; }
