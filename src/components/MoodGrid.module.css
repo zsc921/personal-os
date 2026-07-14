@@ -1,25 +1,26 @@
 /* src/components/MoodGrid.module.css */
-.wrapper { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.wrapper { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .label { font-size: 12px; color: var(--muted); }
 .selectedLabel { color: var(--accent); font-weight: 500; margin-left: 4px; }
+.hint { font-size: 10px; color: var(--muted); opacity: 0.6; }
 
 .grid {
   position: relative;
   max-width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
   background: var(--surface2);
   cursor: crosshair;
-  overflow: hidden;
+  overflow: visible;
 }
 
-.quadrant { position: absolute; width: 50%; height: 50%; opacity: 0.15; }
-.qTL { top: 0; left: 0; background: #F472B6; }
-.qTR { top: 0; right: 0; background: #FBBF24; }
-.qBL { bottom: 0; left: 0; background: #60A5FA; }
-.qBR { bottom: 0; right: 0; background: #34D399; }
+.quadrant { position: absolute; width: 50%; height: 50%; opacity: 0.10; border-radius: inherit; }
+.qTL { top: 0; left: 0; background: #F472B6; border-top-left-radius: 16px; }
+.qTR { top: 0; right: 0; background: #FBBF24; border-top-right-radius: 16px; }
+.qBL { bottom: 0; left: 0; background: #60A5FA; border-bottom-left-radius: 16px; }
+.qBR { bottom: 0; right: 0; background: #34D399; border-bottom-right-radius: 16px; }
 
-.axisH, .axisV { position: absolute; background: var(--border); }
+.axisH, .axisV { position: absolute; background: var(--border-soft); }
 .axisH { left: 0; right: 0; top: 50%; height: 1px; }
 .axisV { top: 0; bottom: 0; left: 50%; width: 1px; }
 
@@ -29,30 +30,74 @@
   color: var(--muted);
   letter-spacing: .04em;
   text-transform: uppercase;
-  opacity: 0.6;
+  opacity: 0.5;
   pointer-events: none;
 }
-.lblTop { top: 4px; left: 50%; transform: translateX(-50%); }
-.lblBot { bottom: 4px; left: 50%; transform: translateX(-50%); }
-.lblLeft { left: 4px; top: 50%; transform: translateY(-50%) rotate(-90deg); transform-origin: left center; }
-.lblRight { right: 4px; top: 50%; transform: translateY(-50%) rotate(90deg); transform-origin: right center; }
+.lblTop { top: 6px; left: 50%; transform: translateX(-50%); }
+.lblBot { bottom: 6px; left: 50%; transform: translateX(-50%); }
+.lblLeft { left: 6px; top: 50%; transform: translateY(-50%) rotate(-90deg); transform-origin: left center; }
+.lblRight { right: 6px; top: 50%; transform: translateY(-50%) rotate(90deg); transform-origin: right center; }
 
+/* Primary — always-labeled anchor emotions */
 .emotion {
   position: absolute;
   transform: translate(-50%, -50%);
   background: none;
   border: none;
-  font-size: 10px;
+  font-size: 10.5px;
+  font-weight: 500;
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-  padding: 2px 4px;
-  border-radius: 4px;
-  transition: background .15s, transform .15s, font-weight .15s;
-  opacity: 0.85;
+  padding: 3px 6px;
+  border-radius: 5px;
+  transition: background .15s, transform .15s;
+  opacity: 0.95;
+  z-index: 2;
 }
-.emotion:hover { opacity: 1; background: var(--surface); transform: translate(-50%, -50%) scale(1.1); }
-.emotionActive { font-weight: 600; opacity: 1; background: var(--surface); }
+.emotion:hover { opacity: 1; background: var(--surface); transform: translate(-50%, -50%) scale(1.1); z-index: 3; }
+.emotionActive { font-weight: 700; opacity: 1; background: var(--surface); box-shadow: 0 0 0 1px currentColor; }
+
+/* Secondary — small unlabeled dots, richer vocabulary without visual clutter */
+.secondaryDot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  opacity: 0.55;
+  transition: opacity .15s, transform .15s;
+  z-index: 1;
+}
+.secondaryDot:hover, .secondaryDot:focus {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.6);
+  z-index: 3;
+  outline: none;
+}
+.dotActive {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.8);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px currentColor;
+}
+
+.tooltip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 10px));
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 10px;
+  color: var(--text);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 4;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
 
 .pin {
   position: absolute;
@@ -64,4 +109,5 @@
   transform: translate(-50%, -50%);
   box-shadow: 0 0 0 2px var(--accent);
   pointer-events: none;
+  z-index: 5;
 }
