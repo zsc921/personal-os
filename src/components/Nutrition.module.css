@@ -33,7 +33,7 @@
 
 .bodyForm { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
 .mealForm { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
-.mealMacroInputs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.mealMacroInputs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
 .input { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; padding: 7px 10px; font-family: inherit; outline: none; min-width: 0; }
 .input:focus { border-color: var(--accent); }
 .input::placeholder { color: var(--muted); }

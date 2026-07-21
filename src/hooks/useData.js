@@ -17,6 +17,8 @@ export function useData() {
   const [wellnessLogs, setWellnessLogs] = useState([])
   const [bodyLogs, setBodyLogs] = useState([])
   const [meals, setMeals] = useState([])
+  const [contacts, setContacts] = useState([])
+  const [hangoutLogs, setHangoutLogs] = useState([])
   const [spendingHistory, setSpendingHistory] = useState([])
   const [settings, setSettings] = useState({ usd_cny_rate: 7.1 })
   const [loading, setLoading] = useState(true)
@@ -32,7 +34,7 @@ export function useData() {
   async function loadAll() {
     setLoading(true)
     try {
-      const [h, hl, t, b, e, j, w, s, bl, m, sh] = await Promise.all([
+      const [h, hl, t, b, e, j, w, s, bl, m, sh, ct, hg] = await Promise.all([
         supabase.from('habits').select('*').order('created_at'),
         supabase.from('habit_logs').select('*').order('date', { ascending: false }).limit(400),
         supabase.from('transactions').select('*').order('created_at', { ascending: false }).limit(200),
@@ -44,6 +46,8 @@ export function useData() {
         supabase.from('body_logs').select('*').order('date', { ascending: false }).limit(60),
         supabase.from('meals').select('*').order('created_at', { ascending: false }).limit(60),
         supabase.from('spending_history').select('*').order('year', { ascending: false }).order('month', { ascending: false }),
+        supabase.from('contacts').select('*').order('name'),
+        supabase.from('hangout_logs').select('*, hangout_log_contacts(contact_id)').order('created_at', { ascending: false }).limit(100),
       ])
       if (h.error) throw h.error
       if (hl.error) throw hl.error
@@ -56,6 +60,8 @@ export function useData() {
       if (bl.error) throw bl.error
       if (m.error) throw m.error
       if (sh.error) throw sh.error
+      if (ct.error) throw ct.error
+      if (hg.error) throw hg.error
 
       setHabits(h.data || [])
       setHabitLogs(hl.data || [])
@@ -67,6 +73,12 @@ export function useData() {
       setBodyLogs(bl.data || [])
       setMeals(m.data || [])
       setSpendingHistory(sh.data || [])
+      setContacts(ct.data || [])
+      // Flatten the join table into a simple contact_ids array per hangout
+      setHangoutLogs((hg.data || []).map(row => ({
+        ...row,
+        contact_ids: (row.hangout_log_contacts || []).map(j => j.contact_id),
+      })))
       const settingsObj = (s.data || []).reduce((acc, row) => {
         acc[row.key] = isNaN(row.value) ? row.value : parseFloat(row.value)
         return acc
@@ -83,7 +95,7 @@ export function useData() {
 
   // ── Real-time subscriptions ───────────────────────────────────────────────
   function setupRealtimeSubscriptions() {
-    const tables = ['habits', 'habit_logs', 'transactions', 'budgets', 'calendar_events', 'journal_entries', 'wellness_logs', 'body_logs', 'meals']
+    const tables = ['habits', 'habit_logs', 'transactions', 'budgets', 'calendar_events', 'journal_entries', 'wellness_logs', 'body_logs', 'meals', 'contacts', 'hangout_logs']
     return tables.map(table =>
       supabase
         .channel(`realtime:${table}`)
@@ -180,6 +192,8 @@ export function useData() {
     ])
     setBodyLogs([])
     setMeals([])
+    setContacts([])
+    setHangoutLogs([])
     setSettings({ usd_cny_rate: 7.1, body_goal: 'maintain' })
   }
 
@@ -344,10 +358,10 @@ export function useData() {
   }, [])
 
   // ── Journal ───────────────────────────────────────────────────────────────
-  const addJournalEntry = useCallback(async ({ text, summary = '', actions = [], insight = '', valence = null, arousal = null, mood_label = null }) => {
+  const addJournalEntry = useCallback(async ({ text, summary = '', actions = [], insight = '', valence = null, arousal = null, mood_label = null, stress = null, loneliness = null }) => {
     const { data, error } = await supabase
       .from('journal_entries')
-      .insert({ text, summary, actions, insight, valence, arousal, mood_label })
+      .insert({ text, summary, actions, insight, valence, arousal, mood_label, stress, loneliness })
       .select()
       .single()
     if (error) throw error
@@ -371,10 +385,10 @@ export function useData() {
   }, [])
 
   // ── Wellness (sleep / energy) ────────────────────────────────────────────
-  const addWellnessLog = useCallback(async ({ sleepHours = null, sleepScore = null, energyLevel = null, note = null }) => {
+  const addWellnessLog = useCallback(async ({ sleepHours = null, sleepScore = null, energyLevel = null, note = null, bedTime = null, wakeTime = null }) => {
     const { data, error } = await supabase
       .from('wellness_logs')
-      .insert({ sleep_hours: sleepHours, sleep_score: sleepScore, energy_level: energyLevel, note })
+      .insert({ sleep_hours: sleepHours, sleep_score: sleepScore, energy_level: energyLevel, note, bed_time: bedTime, wake_time: wakeTime })
       .select()
       .single()
     if (error) throw error
@@ -458,11 +472,11 @@ export function useData() {
   }, [])
 
   // ── Nutrition: meals (calories + macros) ───────────────────────────────────
-  const addMeal = useCallback(async ({ name, calories = 0, carbs = 0, protein = 0, fat = 0, date = null, ingredients = [] }) => {
+  const addMeal = useCallback(async ({ name, calories = 0, carbs = 0, protein = 0, fat = 0, fiber = 0, date = null, ingredients = [] }) => {
     const mealDate = date || new Date().toISOString().split('T')[0]
     const { data, error } = await supabase
       .from('meals')
-      .insert({ name, calories, carbs, protein, fat, date: mealDate, ingredients })
+      .insert({ name, calories, carbs, protein, fat, fiber, date: mealDate, ingredients })
       .select()
       .single()
     if (error) throw error
@@ -474,6 +488,79 @@ export function useData() {
     const { error } = await supabase.from('meals').delete().eq('id', id)
     if (error) throw error
     setMeals(prev => prev.filter(m => m.id !== id))
+  }, [])
+
+  // ── Relationships: contacts + hangout logs ──────────────────────────────────
+  // Find or create a contact by name (case-insensitive), used by the quick-log
+  // autocomplete so typing a new name just works without a separate "add contact" step.
+  const findOrCreateContact = useCallback(async (name) => {
+    const trimmed = name.trim()
+    const existing = contacts.find(c => c.name.toLowerCase() === trimmed.toLowerCase())
+    if (existing) return existing
+    const { data, error } = await supabase
+      .from('contacts')
+      .insert({ name: trimmed })
+      .select()
+      .single()
+    if (error) throw error
+    setContacts(prev => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)))
+    return data
+  }, [contacts])
+
+  const deleteContact = useCallback(async (id) => {
+    const { error } = await supabase.from('contacts').delete().eq('id', id)
+    if (error) throw error
+    setContacts(prev => prev.filter(c => c.id !== id))
+    setHangoutLogs(prev => prev.filter(h => !h.contact_ids.includes(id)))
+  }, [])
+
+  // energy: 1-5, depth: 'surface' | 'real'
+  const logHangout = useCallback(async ({ contactNames, energy, depth, note = '', date = null }) => {
+    const day = date || new Date().toISOString().split('T')[0]
+
+    // Resolve every name to a contact row, creating new ones as needed
+    const resolvedContacts = []
+    for (const name of contactNames) {
+      const c = await findOrCreateContact(name)
+      resolvedContacts.push(c)
+    }
+
+    const { data: hangout, error } = await supabase
+      .from('hangout_logs')
+      .insert({ date: day, energy, depth, note })
+      .select()
+      .single()
+    if (error) throw error
+
+    const junctionRows = resolvedContacts.map(c => ({ hangout_log_id: hangout.id, contact_id: c.id }))
+    const { error: jErr } = await supabase.from('hangout_log_contacts').insert(junctionRows)
+    if (jErr) throw jErr
+
+    const newHangout = { ...hangout, contact_ids: resolvedContacts.map(c => c.id) }
+    setHangoutLogs(prev => [newHangout, ...prev])
+
+    // Update each contact's running average energy/depth and last_contact_date
+    for (const c of resolvedContacts) {
+      const priorLogs = [...hangoutLogs, newHangout].filter(h => h.contact_ids.includes(c.id))
+      const avgEnergy = priorLogs.reduce((s, h) => s + (h.energy || 0), 0) / priorLogs.length
+      const realCount = priorLogs.filter(h => h.depth === 'real').length
+      const depthRatio = realCount / priorLogs.length
+
+      const { error: uErr } = await supabase
+        .from('contacts')
+        .update({ last_contact_date: day, avg_energy: avgEnergy, depth_ratio: depthRatio })
+        .eq('id', c.id)
+      if (uErr) throw uErr
+      setContacts(prev => prev.map(p => p.id === c.id ? { ...p, last_contact_date: day, avg_energy: avgEnergy, depth_ratio: depthRatio } : p))
+    }
+
+    return newHangout
+  }, [contacts, hangoutLogs, findOrCreateContact])
+
+  const deleteHangout = useCallback(async (id) => {
+    const { error } = await supabase.from('hangout_logs').delete().eq('id', id)
+    if (error) throw error
+    setHangoutLogs(prev => prev.filter(h => h.id !== id))
   }, [])
 
   // ── Derived stats ─────────────────────────────────────────────────────────
@@ -497,7 +584,7 @@ export function useData() {
   return {
     // state
     habits: habitsWithStreaks, habitLogs, transactions, budgets, events, journalEntries, wellnessLogs, settings,
-    bodyLogs, meals, spendingHistory,
+    bodyLogs, meals, spendingHistory, contacts, hangoutLogs,
     loading, error,
     // actions
     addHabit, editHabit, toggleHabitDate, markHabitToday, deleteHabit,
@@ -508,6 +595,7 @@ export function useData() {
     addWellnessLog, deleteWellnessLog, editWellnessLog,
     updateSetting,
     addBodyLog, deleteBodyLog, addMeal, deleteMeal,
+    findOrCreateContact, deleteContact, logHangout, deleteHangout,
     reload: loadAll,
     // derived
     totalSpent, totalBudget, maxStreak, habitsDoneToday,

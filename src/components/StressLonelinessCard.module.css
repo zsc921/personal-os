@@ -1,0 +1,8 @@
+/* src/components/StressLonelinessCard.module.css */
+.wrapper { width: 100%; }
+.svg { width: 100%; height: auto; display: block; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 10px; }
+.legendItem { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+.dot { width: 10px; height: 3px; border-radius: 2px; display: inline-block; }
+.axisLabel { fill: var(--muted); font-size: 9px; }
+.empty { font-size: 13px; color: var(--muted); padding: 12px 0; line-height: 1.5; }

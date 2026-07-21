@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import { callClaude, parseJSON } from '../lib/claude'
 import SleepEnergyChart from './SleepEnergyChart'
 import MoodScatter from './MoodScatter'
+import CircadianCard from './CircadianCard'
+import StressLonelinessCard from './StressLonelinessCard'
 import styles from './Home.module.css'
 
 const TODAY = new Date().toISOString().split('T')[0]
@@ -52,6 +54,28 @@ Latest sleep/energy log: ${data.wellnessLogs[0] ? `${data.wellnessLogs[0].sleep_
 
   const todayEvents = data.events[TODAY] || []
 
+  // Honest heuristic, not true detection: flag today's calendar events whose
+  // title mentions a known contact's name, that ended >3h ago, and that
+  // haven't already been logged as a hangout today.
+  const now = new Date()
+  const loggedNamesToday = new Set(
+    data.hangoutLogs
+      .filter(h => h.date === TODAY)
+      .flatMap(h => h.contact_ids)
+  )
+  const hangoutNudge = todayEvents.find(e => {
+    if (!e.time || e.time === 'All day') return false
+    const matchedContact = data.contacts.find(c => e.name?.toLowerCase().includes(c.name.toLowerCase()))
+    if (!matchedContact) return false
+    if (loggedNamesToday.has(matchedContact.id)) return false
+    const eventTime = new Date(`${TODAY} ${e.time}`)
+    const hoursSince = (now - eventTime) / 3600000
+    return hoursSince > 3 && hoursSince < 20
+  })
+  const nudgeContact = hangoutNudge
+    ? data.contacts.find(c => hangoutNudge.name?.toLowerCase().includes(c.name.toLowerCase()))
+    : null
+
   return (
     <div className={styles.home}>
       {/* Morning briefing */}
@@ -90,6 +114,17 @@ Latest sleep/energy log: ${data.wellnessLogs[0] ? `${data.wellnessLogs[0].sleep_
           )}
         </div>
       </div>
+
+      {/* Hangout nudge — cheap heuristic, not true detection */}
+      {nudgeContact && (
+        <div className={styles.nudgeCard} onClick={() => onTabChange('relationships')}>
+          <span className={styles.nudgeIcon}>💬</span>
+          <span className={styles.nudgeText}>
+            Saw <strong>{hangoutNudge.name}</strong> a bit ago — log it with {nudgeContact.name}?
+          </span>
+          <span className={styles.nudgeArrow}>→</span>
+        </div>
+      )}
 
       {/* Stats row */}
       <div className={styles.statsRow}>
@@ -179,6 +214,15 @@ Latest sleep/energy log: ${data.wellnessLogs[0] ? `${data.wellnessLogs[0].sleep_
         <SleepEnergyChart logs={data.wellnessLogs.slice(0, 14)} />
       </div>
 
+      {/* Circadian rhythm consistency */}
+      <div className={styles.card}>
+        <div className={styles.cardHeader}>
+          <span className={styles.cardTitle}>Circadian rhythm</span>
+          <span className={styles.cardSub}>bed & wake consistency</span>
+        </div>
+        <CircadianCard logs={data.wellnessLogs} />
+      </div>
+
       {/* Mood quadrant */}
       <div className={styles.card}>
         <div className={styles.cardHeader}>
@@ -186,6 +230,15 @@ Latest sleep/energy log: ${data.wellnessLogs[0] ? `${data.wellnessLogs[0].sleep_
           <span className={styles.cardSub}>recent journal entries</span>
         </div>
         <MoodScatter entries={data.journalEntries} />
+      </div>
+
+      {/* Stress & loneliness trend */}
+      <div className={styles.card}>
+        <div className={styles.cardHeader}>
+          <span className={styles.cardTitle}>Stress & loneliness</span>
+          <span className={styles.cardSub}>from journal entries</span>
+        </div>
+        <StressLonelinessCard entries={data.journalEntries} />
       </div>
     </div>
   )

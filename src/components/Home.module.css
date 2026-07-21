@@ -117,3 +117,15 @@
 @media (max-width: 480px) {
   .statsRow { grid-template-columns: 1fr; }
 }
+
+.nudgeCard {
+  display: flex; align-items: center; gap: 10px;
+  background: linear-gradient(135deg, rgba(244,114,182,0.12), rgba(167,139,250,0.06));
+  border: 1px solid rgba(244,114,182,0.25); border-radius: 14px;
+  padding: 12px 16px; cursor: pointer; transition: border-color .15s;
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.nudgeCard:hover { border-color: var(--pink); }
+.nudgeIcon { font-size: 16px; }
+.nudgeText { flex: 1; font-size: 12px; color: var(--text); }
+.nudgeArrow { color: var(--pink); font-size: 14px; }

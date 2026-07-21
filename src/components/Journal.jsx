@@ -17,6 +17,8 @@ export default function Journal({ journalEntries, onAddEntry, onUpdateEntry, onD
   const [saving, setSaving] = useState(false)
   const [mood, setMood] = useState(null)
   const [showMood, setShowMood] = useState(false)
+  const [stress, setStress] = useState(null)
+  const [loneliness, setLoneliness] = useState(null)
   const [editingId, setEditingId] = useState(null)
   const [editText, setEditText] = useState('')
   const [expandedIds, setExpandedIds] = useState(new Set())
@@ -113,10 +115,14 @@ export default function Journal({ journalEntries, onAddEntry, onUpdateEntry, onD
     setAnalyzing(true)
     try {
       const raw = await callClaude({
-        system: 'You analyze journal entries. Return ONLY a raw JSON object (no markdown) with: "summary" (1 sentence), "actions" (array of strings, max 3), "insight" (1 motivating observation).',
+        system: 'You analyze journal entries. Return ONLY a raw JSON object (no markdown) with: "summary" (1 sentence), "actions" (array of strings, max 3), "insight" (1 motivating observation), "stress" (integer 0-10 estimating the writer\'s stress level from the text, 0=none 10=overwhelming), "loneliness" (integer 0-10 estimating loneliness/social disconnection, 0=deeply connected 10=very isolated).',
         messages: [{ role: 'user', content: `Analyze this journal entry: "${text}"` }],
       })
-      setAnalysis(parseJSON(raw))
+      const parsed = parseJSON(raw)
+      setAnalysis(parsed)
+      // Only auto-fill scales the user hasn't manually set
+      if (stress == null && typeof parsed.stress === 'number') setStress(parsed.stress)
+      if (loneliness == null && typeof parsed.loneliness === 'number') setLoneliness(parsed.loneliness)
     } catch {
       setAnalysis({ summary: 'AI analysis unavailable.', actions: [], insight: '' })
     }
@@ -134,8 +140,11 @@ export default function Journal({ journalEntries, onAddEntry, onUpdateEntry, onD
       valence: mood?.valence ?? null,
       arousal: mood?.arousal ?? null,
       mood_label: mood?.label ?? null,
+      stress,
+      loneliness,
     })
     setText(''); setAnalysis(null); setMood(null); setShowMood(false)
+    setStress(null); setLoneliness(null)
     setSaving(false)
   }
 
@@ -216,6 +225,36 @@ export default function Journal({ journalEntries, onAddEntry, onUpdateEntry, onD
           </div>
         )}
 
+        <div className={styles.scaleSection}>
+          <div className={styles.scaleRow}>
+            <div className={styles.scaleHeader}>
+              <span className={styles.scaleLabel}>Stress</span>
+              <span className={styles.scaleValue}>{stress == null ? '—' : stress}</span>
+            </div>
+            <input
+              className={styles.slider}
+              type="range" min="0" max="10" step="1"
+              value={stress ?? 5}
+              onChange={e => setStress(Number(e.target.value))}
+              style={{ '--fill': `${((stress ?? 5) / 10) * 100}%`, '--track-color': 'var(--amber)' }}
+            />
+          </div>
+          <div className={styles.scaleRow}>
+            <div className={styles.scaleHeader}>
+              <span className={styles.scaleLabel}>Loneliness</span>
+              <span className={styles.scaleValue}>{loneliness == null ? '—' : loneliness}</span>
+            </div>
+            <input
+              className={styles.slider}
+              type="range" min="0" max="10" step="1"
+              value={loneliness ?? 5}
+              onChange={e => setLoneliness(Number(e.target.value))}
+              style={{ '--fill': `${((loneliness ?? 5) / 10) * 100}%`, '--track-color': 'var(--blue)' }}
+            />
+          </div>
+          <p className={styles.scaleHint}>Set manually, or leave blank and "Analyze" will estimate from your text.</p>
+        </div>
+
         {analysis && (
           <div className={styles.aiBlock}>
             <div className={styles.aiLabel}>AI Analysis</div>
@@ -250,6 +289,8 @@ export default function Journal({ journalEntries, onAddEntry, onUpdateEntry, onD
                       {moodLabelToShow}
                     </span>
                   )}
+                  {e.stress != null && <span className={styles.scaleBadge} style={{ color: 'var(--amber)' }}>S{e.stress}</span>}
+                  {e.loneliness != null && <span className={styles.scaleBadge} style={{ color: 'var(--blue)' }}>L{e.loneliness}</span>}
                   <div className={styles.blurbActions} onClick={ev => ev.stopPropagation()}>
                     <button className={styles.editBtn} onClick={() => { setEditingId(e.id); setEditText(e.text); setExpandedIds(prev => new Set(prev).add(e.id)) }}>✎</button>
                     <button className={styles.deleteBtn} onClick={() => onDeleteEntry(e.id)}>×</button>

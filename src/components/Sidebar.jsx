@@ -3,12 +3,13 @@ import styles from './Sidebar.module.css'
 
 // Each module has its own signature color instead of an icon.
 const NAV = [
-  { id: 'home',      label: 'Home',      color: '#A78BFA' },
-  { id: 'nutrition', label: 'Nutrition', color: '#34D399' },
-  { id: 'habits',    label: 'Habits',    color: '#C4B5FD' },
-  { id: 'finance',   label: 'Finance',   color: '#FBBF24' },
-  { id: 'calendar',  label: 'Calendar',  color: '#60A5FA' },
-  { id: 'journal',   label: 'Journal',   color: '#F472B6' },
+  { id: 'home',          label: 'Home',          color: '#A78BFA' },
+  { id: 'nutrition',     label: 'Nutrition',     color: '#34D399' },
+  { id: 'habits',        label: 'Habits',        color: '#C4B5FD' },
+  { id: 'finance',       label: 'Finance',       color: '#FBBF24' },
+  { id: 'calendar',      label: 'Calendar',      color: '#60A5FA' },
+  { id: 'relationships', label: 'Relationships', color: '#F472B6' },
+  { id: 'journal',       label: 'Journal',       color: '#FB923C' },
 ]
 
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']

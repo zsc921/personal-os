@@ -1,0 +1,76 @@
+/* src/components/Relationships.module.css */
+.wrapper { display: flex; flex-direction: column; gap: 16px; }
+
+.card { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--card-radius); padding: 20px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.cardHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.cardTitle { font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.cardSub { font-size: 11px; color: var(--muted); opacity: 0.7; }
+
+.logCta {
+  width: 100%; background: linear-gradient(135deg, rgba(244,114,182,0.15), rgba(167,139,250,0.10));
+  border: 1px solid rgba(244,114,182,0.3); border-radius: 12px; color: var(--text);
+  font-size: 14px; font-weight: 500; padding: 16px; cursor: pointer; font-family: inherit;
+  transition: border-color .15s, transform .1s;
+}
+.logCta:hover { border-color: var(--pink); }
+.logCta:active { transform: scale(0.99); }
+
+.form { display: flex; flex-direction: column; gap: 4px; }
+.fieldLabel { font-size: 11px; color: var(--muted); margin-top: 10px; margin-bottom: 6px; }
+.fieldLabel:first-child { margin-top: 0; }
+
+.tagInput { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: var(--surface2); border: 1px solid var(--border-soft); border-radius: 10px; padding: 8px 10px; }
+.tag { display: flex; align-items: center; gap: 4px; background: rgba(244,114,182,0.15); color: var(--pink); border-radius: 8px; padding: 4px 8px; font-size: 12px; }
+.tagRemove { background: none; border: none; color: inherit; cursor: pointer; font-size: 13px; padding: 0; line-height: 1; opacity: 0.7; }
+.tagRemove:hover { opacity: 1; }
+.nameField { flex: 1; min-width: 100px; background: none; border: none; color: var(--text); font-size: 13px; font-family: inherit; outline: none; padding: 4px; }
+.nameField::placeholder { color: var(--muted); }
+
+.suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.suggestionChip { background: var(--surface2); border: 1px solid var(--border-soft); border-radius: 8px; color: var(--muted); font-size: 11px; padding: 4px 10px; cursor: pointer; font-family: inherit; }
+.suggestionChip:hover { border-color: var(--accent); color: var(--text); }
+
+.energyRow { display: flex; gap: 6px; }
+.energyBtn { flex: 1; background: var(--surface2); border: 1px solid var(--border-soft); border-radius: 10px; font-size: 20px; padding: 8px 0; cursor: pointer; transition: all .15s; }
+.energyBtn:hover { border-color: var(--accent); }
+.energyActive { background: var(--accent-dim); border-color: var(--accent); transform: scale(1.08); }
+
+.depthRow { display: flex; gap: 8px; }
+.depthBtn { flex: 1; background: var(--surface2); border: 1px solid var(--border-soft); border-radius: 10px; color: var(--muted); font-size: 12px; padding: 9px 0; cursor: pointer; font-family: inherit; transition: all .15s; }
+.depthBtn:hover { border-color: var(--accent); color: var(--text); }
+.depthActive { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+
+.noteField { margin-top: 10px; background: var(--surface2); border: 1px solid var(--border-soft); border-radius: 10px; color: var(--text); font-size: 12px; padding: 9px 12px; font-family: inherit; outline: none; }
+.noteField:focus { border-color: var(--accent); }
+.noteField::placeholder { color: var(--muted); }
+
+.formBtns { display: flex; gap: 8px; margin-top: 14px; }
+.accentBtn { background: var(--accent); border: none; border-radius: 8px; color: #0E0E11; font-size: 12px; font-weight: 600; padding: 9px 16px; cursor: pointer; font-family: inherit; }
+.ghostBtn { background: none; border: 1px solid var(--border-soft); border-radius: 8px; color: var(--muted); font-size: 12px; padding: 9px 16px; cursor: pointer; font-family: inherit; }
+
+.empty { font-size: 13px; color: var(--muted); padding: 12px 0; }
+
+.personRow { border-bottom: 1px solid var(--border-soft); padding: 4px 0; }
+.personRow:last-child { border-bottom: none; }
+.personMain { width: 100%; display: flex; align-items: center; justify-content: space-between; background: none; border: none; padding: 10px 2px; cursor: pointer; font-family: inherit; text-align: left; }
+.personName { font-size: 13px; color: var(--text); }
+.personMeta { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.avgBadge { color: var(--text); opacity: 0.85; }
+.depthBadge { color: var(--muted); }
+.lastContact { color: var(--muted); min-width: 44px; text-align: right; }
+.overdue { color: var(--amber); font-weight: 500; }
+
+.personDetail { padding: 4px 2px 12px; }
+.hangoutRow { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); padding: 5px 0; }
+.hangoutDepth { color: var(--text); }
+.hangoutDate { opacity: 0.7; }
+.hangoutNote { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.deleteBtn { background: none; border: none; color: var(--muted); font-size: 15px; cursor: pointer; padding: 0 2px; margin-left: auto; }
+.deleteBtn:hover { color: var(--red); }
+.deleteContactBtn { background: none; border: 1px solid rgba(248,113,113,0.3); border-radius: 8px; color: var(--red); font-size: 11px; padding: 6px 12px; cursor: pointer; font-family: inherit; margin-top: 8px; }
+.deleteContactBtn:hover { background: rgba(248,113,113,0.1); }
+
+@media (max-width: 768px) {
+  .energyBtn { font-size: 17px; padding: 7px 0; }
+  .personMeta { flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
+}

@@ -5,6 +5,7 @@ import OmniBar from './components/OmniBar'
 import Home from './components/Home'
 import Nutrition from './components/Nutrition'
 import Habits from './components/Habits'
+import Relationships from './components/Relationships'
 import Finance from './components/Finance'
 import Calendar from './components/Calendar'
 import Journal from './components/Journal'
@@ -62,6 +63,8 @@ export default function App() {
           sleepHours: d.sleepHours ?? null,
           sleepScore: d.sleepScore ?? null,
           energyLevel: d.energyLevel ?? null,
+          bedTime: d.bedTime ?? null,
+          wakeTime: d.wakeTime ?? null,
           note: d.note ?? null,
         })
         addToast(toast || action, 'journal')
@@ -76,10 +79,20 @@ export default function App() {
             carbs: d.carbs || 0,
             protein: d.protein || 0,
             fat: d.fat || 0,
+            fiber: d.fiber || 0,
           })
         }
         addToast(toast || action, 'habit')
         setTab('nutrition')
+      } else if (module === 'relationships' && d) {
+        await data.logHangout({
+          contactNames: d.contactNames || [],
+          energy: d.energy || 3,
+          depth: d.depth || 'real',
+          note: d.note || '',
+        })
+        addToast(toast || action, 'habit')
+        setTab('relationships')
       } else {
         addToast("Couldn't determine intent. Try rephrasing.", 'error')
       }
@@ -89,7 +102,7 @@ export default function App() {
     }
   }, [data])
 
-  const titles = { home: 'Good morning', nutrition: 'Nutrition', habits: 'Habit tracker', finance: 'Finance', calendar: 'Calendar', journal: 'Voice journal' }
+  const titles = { home: 'Good morning', nutrition: 'Nutrition', habits: 'Habit tracker', finance: 'Finance', calendar: 'Calendar', relationships: 'Relationships', journal: 'Voice journal' }
 
   return (
     <div className="layout">
@@ -176,6 +189,15 @@ export default function App() {
                   events={data.events}
                   onEditEvent={data.editEvent}
                   onDeleteEvent={data.deleteEvent}
+                />
+              )}
+              {tab === 'relationships' && (
+                <Relationships
+                  contacts={data.contacts}
+                  hangoutLogs={data.hangoutLogs}
+                  onLogHangout={data.logHangout}
+                  onDeleteContact={data.deleteContact}
+                  onDeleteHangout={data.deleteHangout}
                 />
               )}
               {tab === 'journal' && (

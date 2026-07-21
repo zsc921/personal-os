@@ -13,7 +13,7 @@ export default function Nutrition({ bodyLogs, meals, settings, onAddBodyLog, onA
   const [bodyFat, setBodyFat] = useState('')
 
   const [showMealForm, setShowMealForm] = useState(false)
-  const [mealFields, setMealFields] = useState({ name: '', calories: '', carbs: '', protein: '', fat: '', ingredients: [] })
+  const [mealFields, setMealFields] = useState({ name: '', calories: '', carbs: '', protein: '', fat: '', fiber: '', ingredients: [] })
   const [photoPreview, setPhotoPreview] = useState(null)
   const [analyzingPhoto, setAnalyzingPhoto] = useState(false)
   const [photoError, setPhotoError] = useState(null)
@@ -34,7 +34,11 @@ export default function Nutrition({ bodyLogs, meals, settings, onAddBodyLog, onA
     carbs: acc.carbs + (m.carbs || 0),
     protein: acc.protein + (m.protein || 0),
     fat: acc.fat + (m.fat || 0),
-  }), { calories: 0, carbs: 0, protein: 0, fat: 0 })
+    fiber: acc.fiber + (m.fiber || 0),
+  }), { calories: 0, carbs: 0, protein: 0, fat: 0, fiber: 0 })
+
+  // USDA fiber target for adult women under 50: ~26g (midpoint of 25-28g range)
+  const FIBER_TARGET = 26
 
   useEffect(() => {
     if (bodyLogs.length > 0 || meals.length > 0) loadAITargets()
@@ -90,6 +94,7 @@ Today so far: ${todayTotals.calories}cal, ${todayTotals.protein}g protein, ${tod
       carbs: parseFloat(mealFields.carbs) || 0,
       protein: parseFloat(mealFields.protein) || 0,
       fat: parseFloat(mealFields.fat) || 0,
+      fiber: parseFloat(mealFields.fiber) || 0,
       ingredients: mealFields.ingredients || [],
     })
     resetMealForm()
@@ -129,6 +134,7 @@ Return ONLY a raw JSON object (no markdown, no backticks) with:
 - "protein": estimated protein in grams (number)
 - "carbs": estimated carbs in grams (number)
 - "fat": estimated fat in grams (number)
+- "fiber": estimated dietary fiber in grams (number)
 - "confidence": "high" | "medium" | "low" — based on visibility, occlusion, and clarity of portions
 
 Estimate generously when uncertain (account for likely hidden oils, sauces, dressings). When in doubt about size, assume a standard serving.`
@@ -146,6 +152,7 @@ Estimate generously when uncertain (account for likely hidden oils, sauces, dres
         protein: String(Math.round(parsed.protein || 0)),
         carbs: String(Math.round(parsed.carbs || 0)),
         fat: String(Math.round(parsed.fat || 0)),
+        fiber: String(Math.round(parsed.fiber || 0)),
         ingredients: parsed.ingredients || [],
         portionNotes: parsed.portion_notes || '',
         confidence: parsed.confidence || 'medium',
@@ -303,6 +310,7 @@ Estimate generously when uncertain (account for likely hidden oils, sauces, dres
                 <input className={styles.input} type="number" placeholder="protein" value={mealFields.protein} onChange={e => setMealFields(f => ({ ...f, protein: e.target.value }))} />
                 <input className={styles.input} type="number" placeholder="carbs" value={mealFields.carbs} onChange={e => setMealFields(f => ({ ...f, carbs: e.target.value }))} />
                 <input className={styles.input} type="number" placeholder="fat" value={mealFields.fat} onChange={e => setMealFields(f => ({ ...f, fat: e.target.value }))} />
+                <input className={styles.input} type="number" placeholder="fiber" value={mealFields.fiber} onChange={e => setMealFields(f => ({ ...f, fiber: e.target.value }))} />
               </div>
               <div className={styles.mealFormBtns}>
                 <button className={styles.accentBtn} onClick={saveMeal} disabled={analyzingPhoto}>Save meal</button>
@@ -315,6 +323,7 @@ Estimate generously when uncertain (account for likely hidden oils, sauces, dres
           <MacroBar label="Protein" value={todayTotals.protein} target={targets?.protein} color="#A78BFA" />
           <MacroBar label="Carbs" value={todayTotals.carbs} target={targets?.carbs} color="#60A5FA" />
           <MacroBar label="Fat" value={todayTotals.fat} target={targets?.fat} color="#FBBF24" />
+          <MacroBar label="Fiber" value={todayTotals.fiber} target={FIBER_TARGET} color="#34D399" />
 
           <div className={styles.mealList}>
             {todayMeals.length === 0 ? (

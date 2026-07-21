@@ -84,3 +84,26 @@
 .blurbActions { margin-left: auto; display: flex; gap: 6px; opacity: 0; transition: opacity .15s; }
 .blurbCard:hover .blurbActions { opacity: 1; }
 .blurbText { font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+/* Stress & loneliness scales */
+.scaleSection { margin-top: 14px; display: flex; flex-direction: column; gap: 12px; }
+.scaleRow { display: flex; flex-direction: column; gap: 6px; }
+.scaleHeader { display: flex; justify-content: space-between; align-items: baseline; }
+.scaleLabel { font-size: 12px; color: var(--muted); }
+.scaleValue { font-size: 13px; color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.slider {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 5px; border-radius: 3px;
+  background: linear-gradient(to right, var(--track-color) var(--fill), var(--surface2) var(--fill));
+  outline: none; cursor: pointer;
+}
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 15px; height: 15px; border-radius: 50%;
+  background: var(--text); border: 2px solid var(--track-color); cursor: pointer;
+}
+.slider::-moz-range-thumb {
+  width: 15px; height: 15px; border-radius: 50%; background: var(--text);
+  border: 2px solid var(--track-color); cursor: pointer;
+}
+.scaleHint { font-size: 10px; color: var(--muted); opacity: 0.6; }
+
+.scaleBadge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 6px; background: var(--surface2); border: 1px solid var(--border-soft); font-variant-numeric: tabular-nums; }
