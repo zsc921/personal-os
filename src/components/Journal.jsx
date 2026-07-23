@@ -4,6 +4,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { callClaude, parseJSON } from '../lib/claude'
+import { todayStr } from '../lib/dates'
 import MoodGrid, { nearestEmotion } from './MoodGrid'
 import styles from './Journal.module.css'
 
@@ -31,7 +32,7 @@ export default function Journal({ journalEntries, onAddEntry, onUpdateEntry, onD
 
   // ── Data-aware daily prompt (cached per day in localStorage) ──────────────
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = todayStr()
     const cached = localStorage.getItem('journal_prompt')
     if (cached) {
       try {

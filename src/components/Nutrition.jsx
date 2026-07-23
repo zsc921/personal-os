@@ -1,11 +1,12 @@
 // src/components/Nutrition.jsx
 import { useState, useEffect, useRef } from 'react'
 import { callClaude, callClaudeWithImage, parseJSON, fileToBase64 } from '../lib/claude'
+import { todayStr } from '../lib/dates'
 import BodyTrendChart from './BodyTrendChart'
 import styles from './Nutrition.module.css'
 
 const GOALS = ['cut', 'maintain', 'bulk']
-const TODAY = new Date().toISOString().split('T')[0]
+const TODAY = todayStr()
 
 export default function Nutrition({ bodyLogs, meals, settings, onAddBodyLog, onAddMeal, onDeleteMeal, onUpdateSetting }) {
   const [showBodyForm, setShowBodyForm] = useState(false)

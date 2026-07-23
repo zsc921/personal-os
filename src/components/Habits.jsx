@@ -2,10 +2,11 @@
 import { useState } from 'react'
 import HabitRings from './HabitRings'
 import styles from './Habits.module.css'
+import { toLocalDateStr as dateStr } from '../lib/dates'
 
 const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
-function dateStr(d) { return d.toISOString().split('T')[0] }
+// dateStr now comes from lib/dates (local-time safe)
 
 // Returns the 7 dates of the current week (Sunday → Saturday), so the
 // week genuinely resets every Sunday rather than reusing a fixed array.

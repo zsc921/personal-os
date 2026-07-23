@@ -10,6 +10,7 @@ import Finance from './components/Finance'
 import Calendar from './components/Calendar'
 import Journal from './components/Journal'
 import { useData } from './hooks/useData'
+import { todayStr } from './lib/dates'
 import './index.css'
 
 const ICONS = { Food: '🛒', Grocery: '🥦', Transport: '🚇', Shopping: '📦', Health: '💪', Home: '🏠', Travel: '✈️', Beauty: '💄', Sports: '⚽', Utility: '💡', Other: '💳' }
@@ -124,7 +125,7 @@ export default function App() {
           <div className="topbar-brief">
             <div className="brief-dot" />
             <span>
-              {data.habitsDoneToday}/{data.habits.length} habits · ${data.totalSpent} spent · {(data.events[new Date().toISOString().split('T')[0]] || []).length} events today
+              {data.habitsDoneToday}/{data.habits.length} habits · ${data.totalSpent} spent · {(data.events[todayStr()] || []).length} events today
             </span>
           </div>
         </div>

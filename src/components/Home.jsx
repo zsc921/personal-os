@@ -1,13 +1,14 @@
 // src/components/Home.jsx
 import { useState, useEffect } from 'react'
 import { callClaude, parseJSON } from '../lib/claude'
+import { todayStr } from '../lib/dates'
 import SleepEnergyChart from './SleepEnergyChart'
 import MoodScatter from './MoodScatter'
 import CircadianCard from './CircadianCard'
 import StressLonelinessCard from './StressLonelinessCard'
 import styles from './Home.module.css'
 
-const TODAY = new Date().toISOString().split('T')[0]
+const TODAY = todayStr()
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
 export default function Home({ data, onTabChange, onHabitToggle }) {

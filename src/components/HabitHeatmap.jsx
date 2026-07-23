@@ -4,8 +4,9 @@
 
 import { useState } from 'react'
 import styles from './HabitHeatmap.module.css'
+import { toLocalDateStr as dateStr } from '../lib/dates'
 
-function dateStr(d) { return d.toISOString().split('T')[0] }
+// dateStr now comes from lib/dates (local-time safe)
 const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 

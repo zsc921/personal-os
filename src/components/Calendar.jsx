@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import styles from './Calendar.module.css'
 import { startGoogleLogin, fetchGoogleEvents, getConnectedAccounts, disconnectAccount } from '../lib/googleCalendar'
+import { toLocalDateStr } from '../lib/dates'
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const DAY_LABELS = ['Su','Mo','Tu','We','Th','Fr','Sa']
@@ -11,7 +12,7 @@ export default function Calendar({ events, onDeleteEvent, onEditEvent }) {
   const now = new Date()
   const [viewYear, setViewYear] = useState(now.getFullYear())
   const [viewMonth, setViewMonth] = useState(now.getMonth())
-  const [selectedDate, setSelectedDate] = useState(now.toISOString().split('T')[0])
+  const [selectedDate, setSelectedDate] = useState(toLocalDateStr(now))
   const [editingId, setEditingId] = useState(null)
   const [editFields, setEditFields] = useState({})
 
@@ -66,7 +67,7 @@ export default function Calendar({ events, onDeleteEvent, onEditEvent }) {
     else setGoogleEvents({})
   }
 
-  const todayStr = now.toISOString().split('T')[0]
+  const todayStr = toLocalDateStr(now)
   const firstDay = new Date(viewYear, viewMonth, 1).getDay()
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate()
   const prevMonthDays = new Date(viewYear, viewMonth, 0).getDate()

@@ -4,8 +4,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { todayStr, toLocalDateStr as dateStr } from '../lib/dates'
 
-const TODAY = new Date().toISOString().split('T')[0]
+const TODAY = todayStr()
 
 export function useData() {
   const [habits, setHabits] = useState([])
@@ -121,7 +122,7 @@ export function useData() {
     return map
   }
 
-  function dateStr(d) { return d.toISOString().split('T')[0] }
+  // dateStr imported from lib/dates (local-time safe)
 
   // True consecutive-day streak ending today (or yesterday, if today not yet done),
   // walking backward through real calendar dates rather than a fixed weekly array.
@@ -450,7 +451,7 @@ export function useData() {
 
   // ── Nutrition: body logs (weight / body fat) ───────────────────────────────
   const addBodyLog = useCallback(async ({ date, weight = null, bodyFat = null }) => {
-    const today = date || new Date().toISOString().split('T')[0]
+    const today = date || todayStr()
     // Upsert by date so one entry per day
     const { data, error } = await supabase
       .from('body_logs')
@@ -473,7 +474,7 @@ export function useData() {
 
   // ── Nutrition: meals (calories + macros) ───────────────────────────────────
   const addMeal = useCallback(async ({ name, calories = 0, carbs = 0, protein = 0, fat = 0, fiber = 0, date = null, ingredients = [] }) => {
-    const mealDate = date || new Date().toISOString().split('T')[0]
+    const mealDate = date || todayStr()
     const { data, error } = await supabase
       .from('meals')
       .insert({ name, calories, carbs, protein, fat, fiber, date: mealDate, ingredients })
@@ -516,7 +517,7 @@ export function useData() {
 
   // energy: 1-5, depth: 'surface' | 'real'
   const logHangout = useCallback(async ({ contactNames, energy, depth, note = '', date = null }) => {
-    const day = date || new Date().toISOString().split('T')[0]
+    const day = date || todayStr()
 
     // Resolve every name to a contact row, creating new ones as needed
     const resolvedContacts = []

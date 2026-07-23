@@ -4,10 +4,11 @@
 
 import { useState } from 'react'
 import { callClaude, parseJSON } from '../lib/claude'
+import { todayStr, tomorrowStr } from '../lib/dates'
 import styles from './OmniBar.module.css'
 
-const TODAY = new Date().toISOString().split('T')[0]
-const TOMORROW = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+const TODAY = todayStr()
+const TOMORROW = tomorrowStr()
 
 export default function OmniBar({ data, onResult, onToast, onTabChange }) {
   const [input, setInput] = useState('')
