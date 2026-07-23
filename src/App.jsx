@@ -153,7 +153,10 @@ export default function App() {
                   meals={data.meals}
                   settings={data.settings}
                   onAddBodyLog={data.addBodyLog}
+                  onEditBodyLog={data.editBodyLog}
+                  onDeleteBodyLog={data.deleteBodyLog}
                   onAddMeal={data.addMeal}
+                  onEditMeal={data.editMeal}
                   onDeleteMeal={data.deleteMeal}
                   onUpdateSetting={data.updateSetting}
                 />

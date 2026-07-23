@@ -45,7 +45,7 @@ export function useData() {
         supabase.from('wellness_logs').select('*').order('created_at', { ascending: false }).limit(30),
         supabase.from('app_settings').select('*'),
         supabase.from('body_logs').select('*').order('date', { ascending: false }).limit(60),
-        supabase.from('meals').select('*').order('created_at', { ascending: false }).limit(60),
+        supabase.from('meals').select('*').order('created_at', { ascending: false }).limit(300),
         supabase.from('spending_history').select('*').order('year', { ascending: false }).order('month', { ascending: false }),
         supabase.from('contacts').select('*').order('name'),
         supabase.from('hangout_logs').select('*, hangout_log_contacts(contact_id)').order('created_at', { ascending: false }).limit(100),
@@ -473,16 +473,28 @@ export function useData() {
   }, [])
 
   // ── Nutrition: meals (calories + macros) ───────────────────────────────────
-  const addMeal = useCallback(async ({ name, calories = 0, carbs = 0, protein = 0, fat = 0, fiber = 0, date = null, ingredients = [] }) => {
+  const addMeal = useCallback(async ({ name, calories = 0, carbs = 0, protein = 0, fat = 0, fiber = 0, date = null, ingredients = [], healthScore = null, healthNote = null }) => {
     const mealDate = date || todayStr()
     const { data, error } = await supabase
       .from('meals')
-      .insert({ name, calories, carbs, protein, fat, fiber, date: mealDate, ingredients })
+      .insert({ name, calories, carbs, protein, fat, fiber, date: mealDate, ingredients, health_score: healthScore, health_note: healthNote })
       .select()
       .single()
     if (error) throw error
     setMeals(prev => [data, ...prev])
     return data
+  }, [])
+
+  const editMeal = useCallback(async (id, updates) => {
+    const { error } = await supabase.from('meals').update(updates).eq('id', id)
+    if (error) throw error
+    setMeals(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m))
+  }, [])
+
+  const editBodyLog = useCallback(async (id, updates) => {
+    const { error } = await supabase.from('body_logs').update(updates).eq('id', id)
+    if (error) throw error
+    setBodyLogs(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b))
   }, [])
 
   const deleteMeal = useCallback(async (id) => {
@@ -595,7 +607,7 @@ export function useData() {
     addJournalEntry, updateJournalEntry, deleteJournalEntry,
     addWellnessLog, deleteWellnessLog, editWellnessLog,
     updateSetting,
-    addBodyLog, deleteBodyLog, addMeal, deleteMeal,
+    addBodyLog, deleteBodyLog, editBodyLog, addMeal, deleteMeal, editMeal,
     findOrCreateContact, deleteContact, logHangout, deleteHangout,
     reload: loadAll,
     // derived

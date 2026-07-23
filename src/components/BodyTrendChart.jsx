@@ -3,7 +3,7 @@
 
 import styles from './BodyTrendChart.module.css'
 
-export default function BodyTrendChart({ logs }) {
+export default function BodyTrendChart({ logs, goal = 'maintain' }) {
   const data = [...logs].reverse().filter(l => l.weight != null || l.body_fat != null)
 
   if (data.length === 0) {
@@ -37,6 +37,49 @@ export default function BodyTrendChart({ logs }) {
 
   return (
     <div className={styles.wrapper}>
+      <div className={styles.metricStrip}>
+        {(() => {
+          const withW = data.filter(d => d.weight != null)
+          const withF = data.filter(d => d.body_fat != null)
+          const latestW = withW.length ? withW[withW.length - 1].weight : null
+          const prevW = withW.length > 1 ? withW[withW.length - 2].weight : null
+          const latestF = withF.length ? withF[withF.length - 1].body_fat : null
+          const prevF = withF.length > 1 ? withF[withF.length - 2].body_fat : null
+          const dW = (latestW != null && prevW != null) ? latestW - prevW : null
+          const dF = (latestF != null && prevF != null) ? latestF - prevF : null
+
+          // Goal direction: cut = down is good, bulk = up is good, maintain = flat is good
+          const goalDir = goal === 'cut' ? -1 : goal === 'bulk' ? 1 : 0
+          function goodness(delta) {
+            if (delta == null || goalDir === 0) return 'neutral'
+            return Math.sign(delta) === goalDir ? 'good' : 'bad'
+          }
+          const fmtDelta = (d, unit) => d == null ? '—' : `${d > 0 ? '+' : ''}${d.toFixed(1)}${unit}`
+
+          return (
+            <>
+              <div className={styles.metric}>
+                <span className={styles.metricLabel}>Weight</span>
+                <span className={styles.metricValue}>{latestW != null ? `${latestW} kg` : '—'}</span>
+                <span className={`${styles.metricDelta} ${styles[goodness(dW)]}`}>{fmtDelta(dW, ' kg')}</span>
+              </div>
+              <div className={styles.metric}>
+                <span className={styles.metricLabel}>Body fat</span>
+                <span className={styles.metricValue}>{latestF != null ? `${latestF}%` : '—'}</span>
+                <span className={`${styles.metricDelta} ${styles[goodness(dF)]}`}>{fmtDelta(dF, '%')}</span>
+              </div>
+              <div className={styles.metric}>
+                <span className={styles.metricLabel}>Goal</span>
+                <span className={styles.metricValue}>{goal === 'cut' ? 'Cut' : goal === 'bulk' ? 'Bulk' : 'Maintain'}</span>
+                <span className={`${styles.metricDelta} ${styles[goodness(dW)]}`}>
+                  {dW == null ? 'need 2 logs' : goodness(dW) === 'good' ? 'on track' : goodness(dW) === 'bad' ? 'off track' : 'steady'}
+                </span>
+              </div>
+            </>
+          )
+        })()}
+      </div>
+
       <div className={styles.legend}>
         <span className={styles.legendItem}><span className={styles.dotW} /> Weight (kg)</span>
         <span className={styles.legendItem}><span className={styles.dotF} /> Body fat (%)</span>
