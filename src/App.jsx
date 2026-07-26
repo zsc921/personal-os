@@ -13,7 +13,7 @@ import { useData } from './hooks/useData'
 import { todayStr } from './lib/dates'
 import './index.css'
 
-const ICONS = { Food: '🛒', Grocery: '🥦', Transport: '🚇', Shopping: '📦', Health: '💪', Home: '🏠', Travel: '✈️', Beauty: '💄', Sports: '⚽', Utility: '💡', Other: '💳' }
+const ICONS = { Beauty: '💄', Entertainment: '🎬', Dining: '🍽️', Grocery: '🥦', Home: '🏠', Shopping: '📦', Sports: '⚽', Transport: '🚇', Travel: '✈️', Utility: '💡', Rent: '🔑', Other: '💳' }
 
 export default function App() {
   const [tab, setTab] = useState('home')

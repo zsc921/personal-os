@@ -7,9 +7,10 @@ import styles from './YTDChart.module.css'
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const CAT_COLORS = {
-  Food: '#A78BFA', Grocery: '#34D399', Transport: '#60A5FA', Shopping: '#F472B6',
-  Health: '#4ADE80', Home: '#C4B5FD', Travel: '#38BDF8', Beauty: '#FB7185',
-  Sports: '#2DD4BF', Utility: '#FBBF24', Other: '#8B8B95', Ent: '#FB923C',
+  Beauty: '#FB7185', Entertainment: '#FB923C', Dining: '#A78BFA', Grocery: '#34D399',
+  Home: '#C4B5FD', Shopping: '#F472B6', Sports: '#2DD4BF', Transport: '#60A5FA',
+  Travel: '#38BDF8', Utility: '#FBBF24', Rent: '#818CF8', Other: '#8B8B95',
+  Food: '#A78BFA', Health: '#4ADE80', // legacy, for old data still in history
 }
 
 export default function YTDChart({ history, budgets, toCny }) {

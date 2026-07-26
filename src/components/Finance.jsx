@@ -3,8 +3,8 @@ import { useState } from 'react'
 import YTDChart from './YTDChart'
 import styles from './Finance.module.css'
 
-const CATS = ['Food', 'Grocery', 'Transport', 'Shopping', 'Health', 'Home', 'Travel', 'Beauty', 'Sports', 'Utility', 'Other']
-const ICONS = { Food: '🛒', Grocery: '🥦', Transport: '🚇', Shopping: '📦', Health: '💪', Home: '🏠', Travel: '✈️', Beauty: '💄', Sports: '⚽', Utility: '💡', Other: '💳' }
+const CATS = ['Beauty', 'Entertainment', 'Dining', 'Grocery', 'Home', 'Shopping', 'Sports', 'Transport', 'Travel', 'Utility', 'Rent', 'Other']
+const ICONS = { Beauty: '💄', Entertainment: '🎬', Dining: '🍽️', Grocery: '🥦', Home: '🏠', Shopping: '📦', Sports: '⚽', Transport: '🚇', Travel: '✈️', Utility: '💡', Rent: '🔑', Other: '💳' }
 
 export default function Finance({
   budgets, transactions, totalSpent, totalBudget,

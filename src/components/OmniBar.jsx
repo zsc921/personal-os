@@ -37,7 +37,7 @@ Your job:
    - "module": one of "finance", "calendar", "habits", "journal", "wellness", "nutrition", "relationships", "unknown"
    - "action": short past-tense description of what you did (e.g. "Logged $15 Food transaction")
    - "data": the parsed payload:
-       finance  → { name (string), amount (number), cat ("Food"|"Grocery"|"Transport"|"Shopping"|"Health"|"Home"|"Travel"|"Beauty"|"Sports"|"Utility"|"Other"), icon (emoji) }
+       finance  → { name (string), amount (number), cat ("Beauty"|"Entertainment"|"Dining"|"Grocery"|"Home"|"Shopping"|"Sports"|"Transport"|"Travel"|"Utility"|"Rent"|"Other"), icon (emoji) }
        calendar → { date ("YYYY-MM-DD"), time (e.g. "2:00 PM" or "All day"), name (string), tag ("tag-work"|"tag-personal"|"tag-health") }
        habits   → { habitId (number or null if new), name (string), completed (boolean) }
        journal  → { text (string) }
@@ -52,7 +52,7 @@ Nutrition examples: "ate chicken salad, 450 cal, 40g protein, 20g carbs, 15g fat
 
 Relationships examples: "hung out with Sarah, felt energized, real talk" → contactNames: ["Sarah"], energy: 5, depth: "real". "grabbed coffee with Mike and Jen, kind of surface level" → contactNames: ["Mike","Jen"], depth: "surface". "saw my sister today, was draining" → contactNames: ["sister"], energy: 1.
 
-Finance category guidance: "Grocery" = supermarket runs or "groceries." "Food" = restaurants, takeout, coffee, delivery. "Home" = rent, furniture, home supplies, repairs. "Travel" = flights, hotels, trips. "Beauty" = skincare, makeup, salon, spa. "Sports" = gym, classes, sports gear, equipment. "Utility" = electricity, water, internet, phone bills. "Health" = doctor, pharmacy, supplements.
+Finance category guidance: "Grocery" = supermarket runs or "groceries." "Dining" = restaurants, takeout, coffee, food delivery. "Home" = furniture, home supplies, repairs. "Rent" = monthly rent/housing payment. "Travel" = flights, hotels, trips. "Beauty" = skincare, makeup, salon, spa. "Sports" = gym, fitness classes, sports gear, supplements. "Entertainment" = movies, concerts, games, subscriptions like Netflix. "Utility" = electricity, water, internet, phone bills. "Transport" = transit, rideshare, fuel, parking.
 
 Date context: today = ${TODAY}, tomorrow = ${TOMORROW}. For relative dates like "next Monday", calculate the actual date.
 Existing habit IDs and names: ${JSON.stringify(snapshot.habits)}`
