@@ -136,3 +136,15 @@
   .rowActions { opacity: 1; }
   .toggleGroup { flex-wrap: wrap; }
 }
+
+/* ── Body ratios panel (WHR / WHtR) ───────────────────────────── */
+.ratioPanel { display: flex; gap: 10px; margin: 4px 0 16px; flex-wrap: wrap; }
+.ratioItem { flex: 1; min-width: 96px; background: var(--surface2); border: 1px solid var(--border-soft); border-radius: 12px; padding: 10px 12px; }
+.ratioHead { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
+.ratioLabel { font-size: 10px; color: var(--muted); letter-spacing: .03em; }
+.ratioBand { font-size: 9px; font-weight: 600; }
+.ratioValue { font-size: 20px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+.ratioEditBtn { background: none; border: none; color: var(--muted); font-size: 11px; cursor: pointer; padding: 0; }
+.ratioEditBtn:hover { color: var(--accent); }
+.heightEdit { display: flex; gap: 6px; align-items: center; }
+.bodyValDim { font-size: 11px; color: var(--muted); opacity: .75; }

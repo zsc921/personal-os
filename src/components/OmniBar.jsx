@@ -42,13 +42,13 @@ Your job:
        habits   → { habitId (number or null if new), name (string), completed (boolean) }
        journal  → { text (string) }
        wellness → { sleepHours (number or null), sleepScore (number 0-100 or null), energyLevel (number 0-100 or null), bedTime ("HH:MM" 24h or null), wakeTime ("HH:MM" 24h or null), note (string or null) }
-       nutrition → { kind ("meal"|"body"), name (string, for meals), calories (number), carbs (number), protein (number), fat (number), fiber (number), weight (number kg, for body), bodyFat (number %, for body) }
+       nutrition → { kind ("meal"|"body"), name (string, for meals), calories (number), carbs (number), protein (number), fat (number), fiber (number), weight (number kg, for body), bodyFat (number %, for body), waist (number cm, for body), hip (number cm, for body), leg (number cm, thigh circumference, for body) }
        relationships → { contactNames (array of strings), energy (number 1-5, default 3 if unclear), depth ("surface"|"real", default "real"), note (string or null) }
    - "toast": a friendly single-sentence confirmation
 
 Wellness examples: "slept 7.5 hours" → sleepHours: 7.5. "energy is 80 today" → energyLevel: 80. "sleep score 82, energy feels low" → sleepScore: 82, energyLevel: 30 (your best estimate from "low" on a 0-100 scale, where 50-100 is normal). Energy is always 0-100, never 1-10. "bed at 11pm, woke 6:30am" → bedTime: "23:00", wakeTime: "06:30". Convert all times to 24h HH:MM.
 
-Nutrition examples: "ate chicken salad, 450 cal, 40g protein, 20g carbs, 15g fat" → kind: meal. "weighed 62kg this morning, body fat 22%" → kind: body, weight: 62, bodyFat: 22. If only some macros are given, estimate the rest reasonably from the food described.
+Nutrition examples: "ate chicken salad, 450 cal, 40g protein, 20g carbs, 15g fat" → kind: meal. "weighed 62kg this morning, body fat 22%" → kind: body, weight: 62, bodyFat: 22. "waist 74cm, hips 98cm, thigh 55cm" → kind: body, waist: 74, hip: 98, leg: 55. If only some macros are given, estimate the rest reasonably from the food described.
 
 Relationships examples: "hung out with Sarah, felt energized, real talk" → contactNames: ["Sarah"], energy: 5, depth: "real". "grabbed coffee with Mike and Jen, kind of surface level" → contactNames: ["Mike","Jen"], depth: "surface". "saw my sister today, was draining" → contactNames: ["sister"], energy: 1.
 

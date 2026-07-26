@@ -72,7 +72,7 @@ export default function App() {
         setTab('home')
       } else if (module === 'nutrition' && d) {
         if (d.kind === 'body') {
-          await data.addBodyLog({ weight: d.weight ?? null, bodyFat: d.bodyFat ?? null })
+          await data.addBodyLog({ weight: d.weight ?? null, bodyFat: d.bodyFat ?? null, waist: d.waist ?? null, hip: d.hip ?? null, leg: d.leg ?? null })
         } else {
           await data.addMeal({
             name: d.name || 'Meal',

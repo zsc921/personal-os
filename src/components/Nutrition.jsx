@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { callClaude, callClaudeWithImage, parseJSON, fileToBase64 } from '../lib/claude'
 import { todayStr } from '../lib/dates'
 import BodyTrendChart from './BodyTrendChart'
+import { whr, whtr, whrBand, whtrBand } from '../lib/bodyRatios'
 import styles from './Nutrition.module.css'
 
 const GOALS = ['cut', 'maintain', 'bulk']
@@ -12,6 +13,11 @@ export default function Nutrition({ bodyLogs, meals, settings, onAddBodyLog, onE
   const [showBodyForm, setShowBodyForm] = useState(false)
   const [weight, setWeight] = useState('')
   const [bodyFat, setBodyFat] = useState('')
+  const [waist, setWaist] = useState('')
+  const [hip, setHip] = useState('')
+  const [leg, setLeg] = useState('')
+  const [editingHeight, setEditingHeight] = useState(false)
+  const [heightInput, setHeightInput] = useState('')
 
   const [showMealForm, setShowMealForm] = useState(false)
   const [mealFields, setMealFields] = useState({ name: '', calories: '', carbs: '', protein: '', fat: '', fiber: '', ingredients: [] })
@@ -85,14 +91,29 @@ Today so far: ${todayTotals.calories}cal, ${todayTotals.protein}g protein, ${tod
   }
 
   async function saveBody() {
-    if (!weight && !bodyFat) return
+    if (!weight && !bodyFat && !waist && !hip && !leg) return
     await onAddBodyLog({
       date: TODAY,
       weight: weight ? parseFloat(weight) : null,
       bodyFat: bodyFat ? parseFloat(bodyFat) : null,
+      waist: waist ? parseFloat(waist) : null,
+      hip: hip ? parseFloat(hip) : null,
+      leg: leg ? parseFloat(leg) : null,
     })
-    setWeight(''); setBodyFat(''); setShowBodyForm(false)
+    setWeight(''); setBodyFat(''); setWaist(''); setHip(''); setLeg(''); setShowBodyForm(false)
   }
+
+  const heightCm = settings?.height_cm || null
+  async function saveHeight() {
+    const h = parseFloat(heightInput)
+    if (!isNaN(h) && h > 0) await onUpdateSetting('height_cm', h)
+    setEditingHeight(false)
+  }
+
+  // Latest body log that actually has waist measured, for the ratio panel
+  const latestWaistLog = bodyLogs.find(b => b.waist != null)
+  const curWHR = latestWaistLog ? whr(latestWaistLog.waist, latestWaistLog.hip) : null
+  const curWHtR = latestWaistLog && heightCm ? whtr(latestWaistLog.waist, heightCm) : null
 
   async function saveMeal() {
     if (!mealFields.name.trim()) return
@@ -155,12 +176,15 @@ Per serving: ${mealFields.calories || 0} cal, ${mealFields.protein || 0}g protei
   }
   function startEditBody(b) {
     setEditingBodyId(b.id)
-    setBodyEdits({ weight: b.weight ?? '', body_fat: b.body_fat ?? '' })
+    setBodyEdits({ weight: b.weight ?? '', body_fat: b.body_fat ?? '', waist: b.waist ?? '', hip: b.hip ?? '', leg: b.leg ?? '' })
   }
   async function saveBodyEdit(id) {
     await onEditBodyLog(id, {
       weight: bodyEdits.weight === '' ? null : parseFloat(bodyEdits.weight),
       body_fat: bodyEdits.body_fat === '' ? null : parseFloat(bodyEdits.body_fat),
+      waist: bodyEdits.waist === '' ? null : parseFloat(bodyEdits.waist),
+      hip: bodyEdits.hip === '' ? null : parseFloat(bodyEdits.hip),
+      leg: bodyEdits.leg === '' ? null : parseFloat(bodyEdits.leg),
     })
     setEditingBodyId(null)
   }
@@ -324,9 +348,45 @@ Estimate generously when uncertain (account for likely hidden oils, sauces, dres
             <div className={styles.bodyForm}>
               <input className={styles.input} type="number" step="0.1" placeholder="Weight (kg)" value={weight} onChange={e => setWeight(e.target.value)} />
               <input className={styles.input} type="number" step="0.1" placeholder="Body fat (%)" value={bodyFat} onChange={e => setBodyFat(e.target.value)} />
+              <input className={styles.input} type="number" step="0.1" placeholder="Waist (cm)" value={waist} onChange={e => setWaist(e.target.value)} />
+              <input className={styles.input} type="number" step="0.1" placeholder="Hip (cm)" value={hip} onChange={e => setHip(e.target.value)} />
+              <input className={styles.input} type="number" step="0.1" placeholder="Thigh (cm)" value={leg} onChange={e => setLeg(e.target.value)} />
               <button className={styles.accentBtn} onClick={saveBody}>Save</button>
             </div>
           )}
+
+          {/* Body ratios: WHR + WHtR with health bands */}
+          <div className={styles.ratioPanel}>
+            <div className={styles.ratioItem}>
+              <div className={styles.ratioHead}>
+                <span className={styles.ratioLabel}>Waist-to-hip</span>
+                {(() => { const b = whrBand(curWHR); return b && <span className={styles.ratioBand} style={{ color: b.color }}>{b.label}</span> })()}
+              </div>
+              <span className={styles.ratioValue}>{curWHR != null ? curWHR.toFixed(2) : '—'}</span>
+            </div>
+            <div className={styles.ratioItem}>
+              <div className={styles.ratioHead}>
+                <span className={styles.ratioLabel}>Waist-to-height</span>
+                {(() => { const b = whtrBand(curWHtR); return b && <span className={styles.ratioBand} style={{ color: b.color }}>{b.label}</span> })()}
+              </div>
+              <span className={styles.ratioValue}>{curWHtR != null ? curWHtR.toFixed(2) : '—'}</span>
+            </div>
+            <div className={styles.ratioItem}>
+              <div className={styles.ratioHead}>
+                <span className={styles.ratioLabel}>Height</span>
+                {!editingHeight && <button className={styles.ratioEditBtn} onClick={() => { setHeightInput(heightCm ? String(heightCm) : ''); setEditingHeight(true) }}>✎</button>}
+              </div>
+              {editingHeight ? (
+                <div className={styles.heightEdit}>
+                  <input className={styles.input} type="number" step="0.1" placeholder="cm" value={heightInput} onChange={e => setHeightInput(e.target.value)} style={{ width: 66 }} autoFocus />
+                  <button className={styles.accentBtn} onClick={saveHeight}>✓</button>
+                </div>
+              ) : (
+                <span className={styles.ratioValue}>{heightCm ? `${heightCm} cm` : '—'}</span>
+              )}
+            </div>
+          </div>
+
           <BodyTrendChart logs={bodyLogs} goal={goal} />
 
           <div className={styles.bodyLogList}>
@@ -334,9 +394,15 @@ Estimate generously when uncertain (account for likely hidden oils, sauces, dres
               <div key={b.id} className={styles.bodyEditRow}>
                 <span className={styles.bodyDate}>{new Date(b.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                 <input className={styles.input} type="number" step="0.1" placeholder="kg" value={bodyEdits.weight}
-                  onChange={e => setBodyEdits(f => ({ ...f, weight: e.target.value }))} style={{ width: 70 }} />
+                  onChange={e => setBodyEdits(f => ({ ...f, weight: e.target.value }))} style={{ width: 60 }} />
                 <input className={styles.input} type="number" step="0.1" placeholder="%" value={bodyEdits.body_fat}
-                  onChange={e => setBodyEdits(f => ({ ...f, body_fat: e.target.value }))} style={{ width: 70 }} />
+                  onChange={e => setBodyEdits(f => ({ ...f, body_fat: e.target.value }))} style={{ width: 55 }} />
+                <input className={styles.input} type="number" step="0.1" placeholder="waist" value={bodyEdits.waist}
+                  onChange={e => setBodyEdits(f => ({ ...f, waist: e.target.value }))} style={{ width: 60 }} />
+                <input className={styles.input} type="number" step="0.1" placeholder="hip" value={bodyEdits.hip}
+                  onChange={e => setBodyEdits(f => ({ ...f, hip: e.target.value }))} style={{ width: 55 }} />
+                <input className={styles.input} type="number" step="0.1" placeholder="thigh" value={bodyEdits.leg}
+                  onChange={e => setBodyEdits(f => ({ ...f, leg: e.target.value }))} style={{ width: 55 }} />
                 <button className={styles.accentBtn} onClick={() => saveBodyEdit(b.id)}>Save</button>
                 <button className={styles.ghostBtn} onClick={() => setEditingBodyId(null)}>✕</button>
               </div>
@@ -345,6 +411,11 @@ Estimate generously when uncertain (account for likely hidden oils, sauces, dres
                 <span className={styles.bodyDate}>{new Date(b.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                 <span className={styles.bodyVal}>{b.weight != null ? `${b.weight} kg` : '—'}</span>
                 <span className={styles.bodyVal}>{b.body_fat != null ? `${b.body_fat}%` : '—'}</span>
+                {(b.waist != null || b.hip != null || b.leg != null) && (
+                  <span className={styles.bodyValDim}>
+                    W{b.waist ?? '–'}/H{b.hip ?? '–'}/T{b.leg ?? '–'}
+                  </span>
+                )}
                 <div className={styles.rowActions}>
                   <button className={styles.editBtn} onClick={() => startEditBody(b)} title="Edit">✎</button>
                   <button className={styles.deleteBtn} onClick={() => onDeleteBodyLog(b.id)} title="Delete">×</button>

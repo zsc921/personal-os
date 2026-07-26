@@ -450,12 +450,12 @@ export function useData() {
   }, [])
 
   // ── Nutrition: body logs (weight / body fat) ───────────────────────────────
-  const addBodyLog = useCallback(async ({ date, weight = null, bodyFat = null }) => {
+  const addBodyLog = useCallback(async ({ date, weight = null, bodyFat = null, waist = null, hip = null, leg = null }) => {
     const today = date || todayStr()
     // Upsert by date so one entry per day
     const { data, error } = await supabase
       .from('body_logs')
-      .upsert({ date: today, weight, body_fat: bodyFat }, { onConflict: 'date' })
+      .upsert({ date: today, weight, body_fat: bodyFat, waist, hip, leg }, { onConflict: 'date' })
       .select()
       .single()
     if (error) throw error

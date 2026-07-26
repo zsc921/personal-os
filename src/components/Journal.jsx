@@ -6,6 +6,8 @@ import { useState, useRef, useEffect } from 'react'
 import { callClaude, parseJSON } from '../lib/claude'
 import { todayStr } from '../lib/dates'
 import MoodGrid, { nearestEmotion } from './MoodGrid'
+import WeeklyRitual from './WeeklyRitual'
+import { frameworkForDate } from '../lib/weeklyFramework'
 import styles from './Journal.module.css'
 
 export default function Journal({ journalEntries, onAddEntry, onUpdateEntry, onDeleteEntry, dataSnapshot }) {
@@ -46,16 +48,26 @@ export default function Journal({ journalEntries, onAddEntry, onUpdateEntry, onD
 
   async function loadPrompt(today) {
     setPromptLoading(true)
+    const fw = frameworkForDate()
     try {
       const raw = await callClaude({
-        system: `You pick ONE short journal prompt (a single question, under 20 words) for the user, personalized to their recent data. Prompts should be concrete and answerable in 2-5 minutes, not abstract soul-searching. Categories to draw from: daily reflection ("Describe today in three words", "What's taking up most of my mental energy?"), gratitude ("What simple pleasure did I overlook today?"), goal-connected ("What's one thing tomorrow-me will thank me for?", "What am I avoiding, and why?"), energy-aware ("When did I feel most energized today, and what was I doing?"). Pick or adapt based on what stands out in their data: low energy -> energy prompt; broken habit streak -> avoidance prompt; heavy spending -> values check; negative recent moods -> gentle gratitude; all normal -> daily reflection. Return ONLY a raw JSON object: {"question": "..."}`,
+        system: `You pick ONE short journal prompt (a single question, under 20 words) for the user, personalized to their recent data. Prompts should be concrete and answerable in 2-5 minutes, not abstract soul-searching.
+
+This week the user is working through a reflection lens called "${fw.title}" (${fw.subtitle}). Their Sunday questions this week are:
+${fw.questions.map(q => '- ' + q).join('\n')}
+
+Where it fits naturally, angle the daily prompt so it feeds into that lens — it should give them raw material for Sunday's reflection. Don't force it if their data clearly points elsewhere.
+
+Categories to draw from: daily reflection ("Describe today in three words", "What's taking up most of my mental energy?"), gratitude ("What simple pleasure did I overlook today?"), goal-connected ("What's one thing tomorrow-me will thank me for?", "What am I avoiding, and why?"), energy-aware ("When did I feel most energized today, and what was I doing?"). Pick or adapt based on what stands out in their data: low energy -> energy prompt; broken habit streak -> avoidance prompt; heavy spending -> values check; negative recent moods -> gentle gratitude; all normal -> daily reflection.
+
+Return ONLY a raw JSON object: {"question": "..."}`,
         messages: [{ role: 'user', content: `My recent data: ${JSON.stringify(dataSnapshot || {})}. Today is ${today}.` }],
         maxTokens: 200,
       })
       const parsed = parseJSON(raw)
       if (parsed.question) {
         setPrompt(parsed.question)
-        localStorage.setItem('journal_prompt', JSON.stringify({ date: today, question: parsed.question }))
+        localStorage.setItem('journal_prompt', JSON.stringify({ date: today, question: parsed.question, week: fw.week }))
       }
     } catch {
       setPrompt("Describe today in three words — then explain one of them.")
@@ -176,6 +188,12 @@ export default function Journal({ journalEntries, onAddEntry, onUpdateEntry, onD
 
   return (
     <div className={styles.wrapper}>
+      {/* Weekly reflection ritual (4-week rotating framework) */}
+      <WeeklyRitual onComposeIntoJournal={(composed) => {
+        setText(t => t ? t + '\n\n' + composed : composed)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }} />
+
       {/* Daily prompt */}
       <div className={styles.promptCard}>
         <div className={styles.promptLabel}>Today's prompt</div>
